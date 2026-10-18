@@ -3,7 +3,7 @@
 ## Scope
 
 - Main stack: `Streamer.bot + OBS plugin`
-- `Dashboard` is deprecated
+- Local WebUI is served by the OBS plugin at `/admin`; Streamer.bot owns settings and authenticated WebSocket access.
 - `TwitchHivemind` is future work and out of scope unless explicitly requested
 
 ## Main Work Areas

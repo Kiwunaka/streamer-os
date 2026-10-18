@@ -15,7 +15,7 @@ public class CPHInline
     public bool Execute()
     {
         // Get game info from args or fetch current
-        string game = args.ContainsKey("game") ? args["game"].ToString() : "";
+        string game = args.ContainsKey("gameName") ? args["gameName"].ToString() : args.ContainsKey("game") ? args["game"].ToString() : "";
         
         if (string.IsNullOrEmpty(game))
         {

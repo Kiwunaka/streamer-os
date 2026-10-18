@@ -11,6 +11,9 @@
 #include <QPushButton>
 #include <QSpinBox>
 #include <QTimer>
+#include <QCheckBox>
+#include <obs-frontend-api.h>
+#include <util/config-file.h>
 
 namespace {
 QString ModuleDataDir() {
@@ -26,16 +29,24 @@ QString ModuleDataDir() {
 AudioVisualizerDialog::AudioVisualizerDialog(QWidget* parent)
     : QDialog(parent),
       data_dir_(ModuleDataDir()),
-      source_manager_(data_dir_) {
+      source_manager_(data_dir_), server_(data_dir_) {
     setWindowTitle("Audio Visualizer");
     setMinimumSize(720, 520);
     BuildUi();
     LoadSettings();
+    loading_settings_ = false;
 
     status_timer_ = new QTimer(this);
     connect(status_timer_, &QTimer::timeout, this, &AudioVisualizerDialog::UpdateServerStatus);
     status_timer_->start(1000);
     UpdateServerStatus();
+    QTimer::singleShot(0, this, [this]() {
+        if (!auto_start_->isChecked()) return;
+        QString error;
+        if (!server_.Start(BuildServerSettings(), &error))
+            blog(LOG_WARNING, "[Streamer OS] Autostart failed: %s", error.toUtf8().constData());
+        UpdateServerStatus();
+    });
 }
 
 AudioVisualizerDialog::~AudioVisualizerDialog() {

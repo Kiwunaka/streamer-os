@@ -14,7 +14,7 @@ struct AudioServerSettings {
 
 class AudioVisualizerServer {
 public:
-    AudioVisualizerServer();
+    explicit AudioVisualizerServer(const QString& data_dir = QString());
     ~AudioVisualizerServer();
 
     bool Start(const AudioServerSettings& settings, QString* error);

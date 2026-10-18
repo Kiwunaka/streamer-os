@@ -12,7 +12,7 @@ if not exist "%CSC%" (
   exit /b 1
 )
 
-"%CSC%" /nologo /target:library /out:"%OUT%\StreamerOs.Shared.dll" /r:"%SYSWEB%" ^
+"%CSC%" /nologo /target:library /out:"%OUT%\StreamerOs.Shared.dll" /r:"%SYSWEB%" /r:"C:\Windows\Microsoft.NET\Framework64\v4.0.30319\System.Net.Http.dll" ^
   "%~dp0StateModels.cs" ^
   "%~dp0StateSerializer.cs" ^
   "%~dp0StateCompatibility.cs" ^
@@ -20,6 +20,8 @@ if not exist "%CSC%" (
   "%~dp0EventModels.cs" ^
   "%~dp0ProviderContracts.cs" ^
   "%~dp0Contracts\RuntimeEventEnvelope.cs" ^
-  "%~dp0Runtime\VisualEventQueue.cs"
+  "%~dp0Runtime\VisualEventQueue.cs" ^
+  "%~dp0Providers\FalImageClient.cs" ^
+  "%~dp0Providers\SpeechClient.cs"
 
 exit /b %errorlevel%

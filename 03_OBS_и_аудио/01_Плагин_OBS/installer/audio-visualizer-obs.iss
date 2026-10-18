@@ -27,8 +27,11 @@ WizardStyle=modern
 Source: "{#PluginBinDir}\audio-visualizer-plugin.dll"; DestDir: "{app}\obs-plugins\64bit"; Flags: ignoreversion
 Source: "..\audio-visualizer-plugin\*.html"; DestDir: "{app}\data\obs-plugins\audio-visualizer-plugin"; Flags: ignoreversion
 Source: "..\audio-visualizer-plugin\*.md"; DestDir: "{app}\data\obs-plugins\audio-visualizer-plugin"; Flags: ignoreversion
-Source: "..\audio-visualizer-plugin\*.user.js"; DestDir: "{app}\data\obs-plugins\audio-visualizer-plugin"; Flags: ignoreversion
+Source: "..\audio-visualizer-plugin\*.js"; DestDir: "{app}\data\obs-plugins\audio-visualizer-plugin"; Flags: ignoreversion
 Source: "..\audio-visualizer-plugin\icons\*"; DestDir: "{app}\data\obs-plugins\audio-visualizer-plugin\icons"; Flags: ignoreversion recursesubdirs createallsubdirs
+
+Source: "..\audio-visualizer-plugin\*.css"; DestDir: "{app}\data\obs-plugins\audio-visualizer-plugin"; Flags: ignoreversion
+Source: "..\..\..\02_Стримербот_и_CSharp\01_Персоны_и_донаты\Assets\intro_*"; DestDir: "{app}\data\obs-plugins\audio-visualizer-plugin\assets"; Flags: ignoreversion
 
 [Code]
 function ResolveObsPath(Param: string): string;

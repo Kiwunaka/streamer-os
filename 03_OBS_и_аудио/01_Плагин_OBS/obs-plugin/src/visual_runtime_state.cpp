@@ -20,6 +20,19 @@ bool VisualRuntimeState::EnqueueEnvelope(const QJsonObject& envelope, QString* e
     }
 
     const QDateTime now = QDateTime::currentDateTimeUtc();
+    if (event.type == "overlay.hide.v1") {
+        const QString key = event.payload.value("replaceKey").toString();
+        if (key.isEmpty()) {
+            if (error) *error = "overlay.hide.v1 requires payload.replaceKey.";
+            return false;
+        }
+        pending_.erase(std::remove_if(pending_.begin(), pending_.end(), [&key](const RuntimeEvent& item) {
+            return item.replace_key == key;
+        }), pending_.end());
+        if (active_.replace_key == key) active_ = RuntimeEvent();
+        PromoteIfNeeded();
+        return true;
+    }
     if (!event.cooldown_key.isEmpty() && cooldowns_.contains(event.cooldown_key) && cooldowns_[event.cooldown_key] > now) {
         return true;
     }
@@ -31,7 +44,8 @@ bool VisualRuntimeState::EnqueueEnvelope(const QJsonObject& envelope, QString* e
             }
         }
 
-        if (active_.IsValid() && active_.replace_key == event.replace_key && active_.interruptible) {
+        if (active_.IsValid() && active_.replace_key == event.replace_key && active_.interruptible &&
+            now >= active_.activated_at.addMSecs(active_.min_display_ms)) {
             event.activated_at = now;
             active_ = event;
             if (!event.cooldown_key.isEmpty() && event.cooldown_ms > 0) {
@@ -42,7 +56,7 @@ bool VisualRuntimeState::EnqueueEnvelope(const QJsonObject& envelope, QString* e
     }
 
     pending_.append(event);
-    std::sort(pending_.begin(), pending_.end(), [](const RuntimeEvent& left, const RuntimeEvent& right) {
+    std::stable_sort(pending_.begin(), pending_.end(), [](const RuntimeEvent& left, const RuntimeEvent& right) {
         return HigherPriority(left, right);
     });
     PromoteIfNeeded();
@@ -112,7 +126,22 @@ void VisualRuntimeState::PromoteIfNeeded()
 {
     const QDateTime now = QDateTime::currentDateTimeUtc();
 
+    pending_.erase(std::remove_if(pending_.begin(), pending_.end(), [&now](const RuntimeEvent& item) {
+        return item.ExpireAt() <= now;
+    }), pending_.end());
+    for (auto it = cooldowns_.begin(); it != cooldowns_.end();) {
+        if (it.value() <= now) it = cooldowns_.erase(it);
+        else ++it;
+    }
+
     if (active_.IsValid() && active_.ExpireAt() <= now) {
+        active_ = RuntimeEvent();
+    }
+
+    if (active_.IsValid() && active_.interruptible && !pending_.isEmpty() &&
+        now >= active_.activated_at.addMSecs(active_.min_display_ms) &&
+        (pending_.first().priority > active_.priority ||
+         (!active_.replace_key.isEmpty() && pending_.first().replace_key == active_.replace_key))) {
         active_ = RuntimeEvent();
     }
 

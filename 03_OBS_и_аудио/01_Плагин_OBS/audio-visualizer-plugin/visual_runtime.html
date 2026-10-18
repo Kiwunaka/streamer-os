@@ -392,6 +392,7 @@
                 linear-gradient(180deg, rgba(10, 14, 20, 0.92), rgba(13, 10, 28, 0.92));
             border-color: rgba(116, 239, 208, 0.34);
         }
+        .runtime-media { display: block; width: 100%; max-height: 42vh; object-fit: contain; border-radius: 12px; }
     </style>
 </head>
 <body>
@@ -421,6 +422,39 @@
         const meta = document.getElementById('meta');
 
         let currentId = '';
+        let activeAudio = null;
+
+        function stopMedia() {
+            if (activeAudio) {
+                activeAudio.pause();
+                activeAudio.removeAttribute('src');
+                activeAudio.load();
+                activeAudio = null;
+            }
+        }
+
+        function renderMedia(payload, type) {
+            renderGeneric(payload, type);
+            title.textContent = payload.persona || payload.title || 'Streamer OS';
+            subtitle.textContent = payload.donor ? `${payload.donor} · ${payload.amount || ''}` : (payload.user || payload.notification || '');
+            body.textContent = payload.message || payload.reactionText || payload.prompt || '';
+            const intro = payload.intro || {};
+            const image = payload.image || (intro.image ? `assets/${encodeURIComponent(intro.image)}` : '');
+            const audio = payload.audio || (intro.audio ? `assets/${encodeURIComponent(intro.audio)}` : '');
+            if (image) {
+                const node = document.createElement('img');
+                node.className = 'runtime-media';
+                node.alt = payload.prompt || payload.persona || 'Изображение события';
+                node.src = image;
+                node.onerror = () => node.remove();
+                stage.appendChild(node);
+                stage.classList.add('active');
+            }
+            if (audio) {
+                activeAudio = new Audio(audio);
+                activeAudio.play().catch(() => { meta.textContent = 'Не удалось воспроизвести звук'; });
+            }
+        }
 
         function clearNodes(node) {
             while (node.firstChild) node.removeChild(node.firstChild);
@@ -619,6 +653,7 @@
         }
 
         function renderEvent(event) {
+            stopMedia();
             if (!event) {
                 currentId = '';
                 runtime.classList.remove('visible');
@@ -635,7 +670,14 @@
             stage.innerHTML = '';
             meta.textContent = `${type} | p${event.priority ?? 50}`;
 
-            if (type === 'fortune.oracle.v1') {
+            if (type === 'overlay.hide.v1') {
+                renderEvent(null);
+                return;
+            } else if (type === 'donation.scene.v1' || type === 'image.reward.v1' || type === 'persona.switch.v1') {
+                renderMedia(payload, type);
+            } else if (payload.template === 'loading') {
+                renderGeneric({ title: payload.persona, subtitle: payload.donor, message: 'Готовлю ответ…' }, type);
+            } else if (type === 'fortune.oracle.v1') {
                 renderFortune(payload);
             } else if (type === 'loot.drop.v1') {
                 renderLoot(payload);
@@ -652,7 +694,7 @@
             try {
                 const response = await fetch('http://127.0.0.1:1608/runtime/state', { cache: 'no-store' });
                 if (!response.ok) {
-                    runtime.classList.remove('visible');
+                    renderEvent(null);
                     meta.textContent = 'runtime offline';
                     return;
                 }
@@ -668,13 +710,16 @@
                     renderEvent(event);
                 }
             } catch (error) {
-                runtime.classList.remove('visible');
+                renderEvent(null);
                 meta.textContent = 'waiting for plugin';
             }
         }
 
-        setInterval(poll, 220);
-        poll();
+        async function pollLoop() {
+            await poll();
+            setTimeout(pollLoop, 220);
+        }
+        pollLoop();
     </script>
 </body>
 </html>

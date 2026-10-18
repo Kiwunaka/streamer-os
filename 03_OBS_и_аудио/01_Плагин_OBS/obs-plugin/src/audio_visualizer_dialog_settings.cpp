@@ -29,6 +29,8 @@ void AudioVisualizerDialog::LoadSettings() {
     if (!config) {
         return;
     }
+    if (config_has_user_value(config, kConfigSection, "AutoStart"))
+        auto_start_->setChecked(config_get_bool(config, kConfigSection, "AutoStart"));
 
     if (config_has_user_value(config, kConfigSection, "Preset")) {
         SetComboValue(preset_combo_, QString::fromUtf8(config_get_string(config, kConfigSection, "Preset")));
@@ -146,11 +148,13 @@ void AudioVisualizerDialog::LoadSettings() {
 }
 
 void AudioVisualizerDialog::SaveSettings() const {
+    if (loading_settings_) return;
     config_t* config = obs_frontend_get_profile_config();
     if (!config) {
         return;
     }
 
+    config_set_bool(config, kConfigSection, "AutoStart", auto_start_->isChecked());
     config_set_string(config, kConfigSection, "Preset", preset_combo_->currentText().toUtf8().constData());
     config_set_int(config, kConfigSection, "Opacity", opacity_spin_->value());
     config_set_double(config, kConfigSection, "Sensitivity", sensitivity_spin_->value());

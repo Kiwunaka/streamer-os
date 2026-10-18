@@ -6,19 +6,28 @@
 #include <QJsonParseError>
 #include <QHostAddress>
 #include <QTcpSocket>
+#include <QFile>
 namespace {
+constexpr int kMaxHeaderBytes = 16384;
+constexpr int kMaxBodyBytes = 32 * 1024 * 1024; // Base64 image and speech in donation.scene.v1.
 int ParseContentLength(const QByteArray& headers) {
+    int content_length = 0;
+    bool found = false;
     const QList<QByteArray> lines = headers.split('\n');
     for (const QByteArray& line : lines) {
         const QByteArray trimmed = line.trimmed();
         if (trimmed.toLower().startsWith("content-length:")) {
+            if (found) return -1;
+            found = true;
             const QByteArray value = trimmed.mid(15).trimmed();
             bool ok = false;
             const int length = value.toInt(&ok);
-            return ok ? length : 0;
+            if (!ok || length < 0) return -1;
+            content_length = length;
         }
+        if (trimmed.toLower().startsWith("transfer-encoding:")) return -1;
     }
-    return 0;
+    return content_length;
 }
 
 QByteArray StatusText(int code) {
@@ -29,6 +38,8 @@ QByteArray StatusText(int code) {
             return "Bad Request";
         case 404:
             return "Not Found";
+        case 413:
+            return "Payload Too Large";
         case 422:
             return "Unprocessable Entity";
         default:
@@ -37,10 +48,10 @@ QByteArray StatusText(int code) {
 }
 } // namespace
 
-HttpServer::HttpServer(TrackStore* store, VisualRuntimeState* runtime, QObject* parent)
+HttpServer::HttpServer(TrackStore* store, VisualRuntimeState* runtime, const QString& data_dir, QObject* parent)
     : QObject(parent),
       store_(store),
-      runtime_(runtime) {}
+      runtime_(runtime), data_dir_(data_dir) {}
 
 bool HttpServer::Start(quint16 port, QString* error) {
     if (server_) {
@@ -104,15 +115,30 @@ void HttpServer::OnReadyRead() {
 
     QByteArray& buffer = buffers_[socket];
     buffer.append(socket->readAll());
+    if (buffer.size() > kMaxHeaderBytes + kMaxBodyBytes) {
+        socket->write(BuildJsonResponse(413, "{}"));
+        socket->disconnectFromHost();
+        return;
+    }
 
     while (true) {
         const int header_end = buffer.indexOf("\r\n\r\n");
+        if (header_end > kMaxHeaderBytes || (header_end < 0 && buffer.size() > kMaxHeaderBytes)) {
+            socket->write(BuildJsonResponse(413, "{}"));
+            socket->disconnectFromHost();
+            return;
+        }
         if (header_end < 0) {
             return;
         }
 
         const QByteArray header = buffer.left(header_end + 4);
         const int content_length = ParseContentLength(header);
+        if (content_length < 0 || content_length > kMaxBodyBytes) {
+            socket->write(BuildJsonResponse(content_length < 0 ? 400 : 413, "{}"));
+            socket->disconnectFromHost();
+            return;
+        }
         const int total_length = header_end + 4 + content_length;
         if (buffer.size() < total_length) {
             return;
@@ -161,6 +187,19 @@ void HttpServer::HandleRequest(QTcpSocket* socket, const QByteArray& request) {
     }
 
     if (method == "GET") {
+        if (path == "/admin" || path == "/admin/" || path == "/admin.js" || path == "/admin.css") {
+            const QString file_name = (path == "/admin" || path == "/admin/") ? "admin.html" : QString::fromUtf8(path.mid(1));
+            QFile file(data_dir_ + "/" + file_name);
+            if (!file.open(QIODevice::ReadOnly)) {
+                socket->write(BuildJsonResponse(404, "{\"message\":\"Admin files are not installed.\"}"));
+                return;
+            }
+            const QByteArray content_type = file_name.endsWith(".html") ? "text/html; charset=utf-8" :
+                (file_name.endsWith(".js") ? "text/javascript; charset=utf-8" : "text/css; charset=utf-8");
+            const QByteArray body = file.readAll();
+            socket->write("HTTP/1.1 200 OK\r\nContent-Type: " + content_type + "\r\nCache-Control: no-store\r\nContent-Length: " + QByteArray::number(body.size()) + "\r\n\r\n" + body);
+            return;
+        }
         if (path == "/runtime/state") {
             const QJsonObject snapshot = runtime_ ? runtime_->Snapshot() : QJsonObject();
             socket->write(BuildJsonResponse(200, QJsonDocument(snapshot).toJson(QJsonDocument::Compact)));

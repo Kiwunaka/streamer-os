@@ -23,7 +23,9 @@ public class CPHInline
         stream["FeatureFlags"] = stream["FeatureFlags"] ?? new JObject();
 
         var viewerModes = (JObject)automation["ViewerModes"];
-        bool current = viewerModes.Value<bool?>(mode) ?? false;
+        bool current = string.Equals(mode, "all", StringComparison.OrdinalIgnoreCase)
+            ? viewerModes.Value<bool?>("viewer_modes_enabled") ?? false
+            : viewerModes.Value<bool?>(mode) ?? false;
         bool next = ResolveNextValue(current);
 
         if (string.Equals(mode, "all", StringComparison.OrdinalIgnoreCase))

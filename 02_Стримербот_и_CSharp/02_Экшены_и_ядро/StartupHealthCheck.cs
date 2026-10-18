@@ -12,30 +12,30 @@ public class CPHInline
         var okItems = new List<string>();
         var warnings = new List<string>();
 
-        CheckRequiredKey("OpenRouterKey", okItems, warnings);
         CheckRequiredKey("VisualRuntimeEndpoint", okItems, warnings);
-        CheckRequiredKey("InworldTTSAuth", okItems, warnings);
-
-        string primaryTts = CPH.GetGlobalVar<string>("TtsProviderPrimary", true);
-        if (string.IsNullOrWhiteSpace(primaryTts))
+        string llm = CPH.GetGlobalVar<string>("LlmProvider", true) ?? "openrouter";
+        var keys = new HashSet<string>();
+        foreach (string setting in new[] { "ChatBotProvider", "ModProvider", "OracleProvider", "DonationProvider", "StreamRecapProvider" })
         {
-            warnings.Add("TtsProviderPrimary is empty. Recommended value: inworld.");
+            string provider = CPH.GetGlobalVar<string>(setting, true);
+            if (string.IsNullOrWhiteSpace(provider)) provider = llm;
+            keys.Add(provider == "fireworks" ? "FireworksKey" : "OpenRouterKey");
         }
-        else
+        foreach (string setting in new[] { "TtsProviderPrimary", "TtsProviderSecondary", "TtsProviderTertiary" })
         {
-            okItems.Add("TtsProviderPrimary=" + primaryTts);
+            string provider = CPH.GetGlobalVar<string>(setting, true);
+            switch (provider)
+            {
+                case "inworld": keys.Add("InworldTTSAuth"); keys.Add("InworldVoiceId"); break;
+                case "fish": keys.Add("FishAudioApiKey"); keys.Add("FishAudioVoiceRefId"); break;
+                case "elevenlabs": keys.Add("ElevenLabsKey"); keys.Add("ElevenLabsVoiceId"); break;
+                case "ntts": keys.Add("NttsApiKey"); break;
+            }
         }
-
-        bool fishEnabled = GetBoolGlobal("FishAudioEnabled", false);
-        if (fishEnabled)
-        {
-            CheckRequiredKey("FishAudioApiKey", okItems, warnings);
-            CheckOptionalKey("FishAudioVoiceRefId", okItems, warnings, "Fish voice reference is empty, fallback voice selection may be used.");
-        }
-        else
-        {
-            okItems.Add("Fish Audio is disabled");
-        }
+        string imageProvider = CPH.GetGlobalVar<string>("ImageGenerationProvider", true);
+        keys.Add(imageProvider == "fal" ? "FalApiKey" : "FireworksKey");
+        if (CPH.GetGlobalVar<string>("DonationImageProvider", true) == "fal") keys.Add("FalApiKey");
+        foreach (string key in keys) CheckRequiredKey(key, okItems, warnings);
 
         string endpoint = CPH.GetGlobalVar<string>("VisualRuntimeEndpoint", true);
         if (!string.IsNullOrWhiteSpace(endpoint))
@@ -105,7 +105,7 @@ public class CPHInline
             {
                 client.Timeout = TimeSpan.FromSeconds(2);
                 var response = client.GetAsync(builder.Uri).Result;
-                if (response.IsSuccessStatusCode)
+                if (response.IsSuccessStatusCode && JObject.Parse(response.Content.ReadAsStringAsync().Result)["pendingCount"] != null)
                 {
                     okItems.Add("OBS runtime endpoint responded");
                 }

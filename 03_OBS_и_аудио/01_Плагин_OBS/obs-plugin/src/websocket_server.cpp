@@ -5,6 +5,7 @@
 #include <QString>
 
 WebSocketServer::WebSocketServer() {
+    server_.init_asio();
     server_.clear_access_channels(websocketpp::log::alevel::all);
     server_.clear_error_channels(websocketpp::log::elevel::all);
 }
@@ -19,13 +20,14 @@ bool WebSocketServer::Start(uint16_t port, QString* error) {
     }
 
     try {
-        server_.init_asio();
+        server_.reset();
         server_.set_reuse_addr(true);
         server_.set_open_handler([this](ConnectionHandle hdl) { HandleOpen(hdl); });
         server_.set_close_handler([this](ConnectionHandle hdl) { HandleClose(hdl); });
         server_.set_fail_handler([this](ConnectionHandle hdl) { HandleClose(hdl); });
 
-        server_.listen(port);
+        server_.listen(websocketpp::lib::asio::ip::tcp::endpoint(
+            websocketpp::lib::asio::ip::address_v4::loopback(), port));
         server_.start_accept();
     } catch (const std::exception& ex) {
         if (error) {

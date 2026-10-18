@@ -14,7 +14,7 @@ public class CPHInline
 
         JObject state = ReadViewerGameState();
         JObject players = state["Players"] as JObject ?? new JObject();
-        JObject player = players[user] as JObject;
+        JObject player = players.GetValue(user, StringComparison.OrdinalIgnoreCase) as JObject;
 
         if (player == null)
         {

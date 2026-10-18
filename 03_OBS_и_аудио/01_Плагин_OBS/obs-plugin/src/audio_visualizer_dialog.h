@@ -43,6 +43,7 @@ private:
     WidgetTarget BuildWidgetTarget() const;
     WidgetTarget BuildRuntimeTarget() const;
 
+    bool loading_settings_ = true;
     QString data_dir_;
     WidgetSourceManager source_manager_;
     AudioVisualizerServer server_;
@@ -56,6 +57,7 @@ private:
     QPushButton* start_button_ = nullptr;
     QPushButton* stop_button_ = nullptr;
     QPushButton* restart_button_ = nullptr;
+    QCheckBox* auto_start_ = nullptr;
 
     QComboBox* preset_combo_ = nullptr;
     QSpinBox* opacity_spin_ = nullptr;

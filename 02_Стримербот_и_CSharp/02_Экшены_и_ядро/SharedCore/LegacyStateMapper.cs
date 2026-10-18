@@ -11,8 +11,8 @@ namespace StreamerOs.Shared
             bundle.Stream.ProviderRouting.TextModel = globals.Get("ChatBotModel", globals.Get("FireworksModelChat", string.Empty));
             bundle.Stream.ProviderRouting.PrimaryVisionProvider = "fireworks";
             bundle.Stream.ProviderRouting.VisionModel = globals.Get("FireworksModelChat", string.Empty);
-            bundle.Stream.ProviderRouting.PrimaryTtsProvider = globals.GetBool("FishAudioEnabled", false) ? "fish" : "legacy";
-            bundle.Stream.FeatureFlags.SafeModeEnabled = globals.GetBool("ChatBotStrictSafety", true);
+            bundle.Stream.ProviderRouting.PrimaryTtsProvider = globals.Get("TtsProviderPrimary", "inworld");
+            bundle.Stream.FeatureFlags.SafeModeEnabled = globals.GetBool("SafeModeEnabled", false);
 
             bundle.Persona.ActivePersona = globals.Get("AiSystemPrompt", bundle.Persona.ActivePersona);
             bundle.Persona.BehaviorFlags["roleplay_enabled"] = globals.GetBool("RoleplayEnabled", false);

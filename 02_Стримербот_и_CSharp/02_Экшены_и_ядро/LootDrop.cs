@@ -11,6 +11,8 @@ public class CPHInline
 
     public bool Execute()
     {
+        string automation = CPH.GetGlobalVar<string>("AutomationState", true);
+        if (!string.IsNullOrWhiteSpace(automation) && JObject.Parse(automation)["ViewerModes"]?["viewer_modes_enabled"]?.Value<bool>() == false) return true;
         string user = NormalizeUser(GetArg("userName", GetArg("user", "зритель")));
 
         JObject state = ReadViewerGameState();
@@ -81,7 +83,7 @@ public class CPHInline
 
     private JObject EnsurePlayer(JObject players, string user)
     {
-        JObject player = players[user] as JObject;
+        JObject player = players.GetValue(user, StringComparison.OrdinalIgnoreCase) as JObject;
         if (player == null)
         {
             player = new JObject();

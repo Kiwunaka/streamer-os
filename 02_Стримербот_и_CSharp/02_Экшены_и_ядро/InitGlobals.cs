@@ -40,11 +40,19 @@ public class CPHInline
             { "NttsVoiceList", "" },
             { "NttsMixPct", "70" },
             { "ElevenLabsKey", "" },
+            { "ElevenLabsVoiceId", "" },
+            { "ElevenLabsModel", "eleven_multilingual_v2" },
+            { "FalApiKey", "" },
+            { "FalImageModel", "fal-ai/flux/schnell" },
+            { "DonationImageProvider", "openrouter" },
+            { "DonationImageModel", "google/gemini-2.5-flash-image" },
+            { "ImageShareToChat", "false" },
+            { "ImageRefinePrompt", "" },
             { "OpenRouterSiteUrl", "https://twitch.tv/your_channel" },
             { "OpenRouterAppName", "StreamerOS Bot" },
             { "LlmProvider", "openrouter" },
             { "FireworksModelChat", "accounts/fireworks/models/kimi-k2-instruct-0905" },
-            { "OpenRouterDefaultTextModel", "xiaomi/mimo-v2-flash" },
+            { "OpenRouterDefaultTextModel", "google/gemini-2.5-flash-lite" },
             { "FireworksDefaultTextModel", "accounts/fireworks/models/kimi-k2-instruct-0905" },
             { "ChatBotProvider", "" },
             { "ModProvider", "" },
@@ -52,7 +60,7 @@ public class CPHInline
             { "OracleProvider", "" },
             { "DonationProvider", "" },
             { "StreamRecapProvider", "" },
-            { "OracleModel", "xiaomi/mimo-v2-flash" },
+            { "OracleModel", "google/gemini-2.5-flash-lite" },
             { "VisualRuntimeEndpoint", "http://127.0.0.1:1608/events" },
 
             // Persona / Roleplay
@@ -65,8 +73,8 @@ public class CPHInline
             { "ModBlacklist", "badword1,badword2" },
             { "ModLlmMessageScan", "false" },
             { "ModTimeoutSeconds", "60" },
-            { "ModModel", "google/gemini-2.0-flash-001" },
-            { "ModResponseModel", "google/gemini-2.0-flash-001" },
+            { "ModModel", "google/gemini-2.5-flash" },
+            { "ModResponseModel", "google/gemini-2.5-flash" },
             { "ModResponsePrompt", "" },
 
             // Chat bot
@@ -76,7 +84,7 @@ public class CPHInline
             { "ChatBotMaxChars", "500" },
             { "ChatBotMinIntervalSec", "20" },
             { "ChatBotCommandsCacheTtlSec", "300" },
-            { "ChatBotModel", "xiaomi/mimo-v2-flash" },
+            { "ChatBotModel", "google/gemini-2.5-flash-lite" },
             { "ChatBotTemperature", "0.7" },
             { "ChatBotMaxTokens", "140" },
             { "ChatBotRelationshipEnabled", "true" },
@@ -90,22 +98,22 @@ public class CPHInline
             { "ChatBotReasoningEffort", "none" },
             { "FishAudioEnabled", "false" },
             { "FishAudioApiKey", "" },
-            { "FishAudioModel", "s2-pro" },
+            { "FishAudioModel", "s2.1-pro" },
             { "FishAudioVoiceRefId", "" },
             { "FishAudioFormat", "mp3" },
             { "FishAudioLatency", "normal" },
             { "TtsProviderPrimary", "inworld" },
             { "TtsProviderSecondary", "ntts" },
             { "TtsProviderTertiary", "fish" },
-            { "InworldModelId", "inworld-tts-1.5-max" },
-            { "InworldVoiceId", "default-mtpxxj7uhgk_xn4yzgz4aq__chitani" },
+            { "InworldModelId", "inworld-tts-2" },
+            { "InworldVoiceId", "Ashley" },
             { "InworldAudioEncoding", "LINEAR16" },
             { "InworldSampleRateHertz", "22050" },
             { "InworldSpeakingRate", "1.0" },
 
             // Donation
-            { "DonationModel", "xiaomi/mimo-v2-flash" },
-            { "StreamRecapModel", "xiaomi/mimo-v2-flash" },
+            { "DonationModel", "google/gemini-2.5-flash-lite" },
+            { "StreamRecapModel", "google/gemini-2.5-flash-lite" },
 
             { "ImageReactionEnabled", "true" },
             { "ImageReactionTtsAction", "TTS" },
@@ -114,7 +122,7 @@ public class CPHInline
             { "ImageReactionStrictSafety", "true" },
             { "ImageReactionStyle", "sarcastic_soft" },
             { "ImageRefineProvider", "openrouter" },
-            { "ImageRefineModel", "google/gemini-2.0-flash-001" },
+            { "ImageRefineModel", "google/gemini-2.5-flash" },
             { "ImageReactionProvider", "fireworks" },
             { "ImageGenerationProvider", "fireworks" },
             { "ImageGenerationModel", "accounts/fireworks/models/flux-kontext-max" },
@@ -124,7 +132,7 @@ public class CPHInline
             { "ImageReactionReasoningEffort", "none" },
             { "ImageReactionFallbackFireworksModel", "accounts/fireworks/models/minimax-m2p1" },
             { "ImageReactionFallbackReasoningEffort", "none" },
-            { "ImageReactionOpenRouterModel", "google/gemini-2.0-flash-001" },
+            { "ImageReactionOpenRouterModel", "google/gemini-2.5-flash" },
             { "StreamState", DefaultStreamStateJson },
             { "PersonaState", DefaultPersonaStateJson },
             { "AutomationState", DefaultAutomationStateJson },
@@ -143,7 +151,7 @@ public class CPHInline
             string value = kvp.Value;
 
             string current = CPH.GetGlobalVar<string>(key, true);
-            if (force || string.IsNullOrEmpty(current))
+            if (force || string.IsNullOrEmpty(current) || current == "xiaomi/mimo-v2-flash" || current == "google/gemini-2.0-flash-001")
             {
                 CPH.SetGlobalVar(key, value, true);
                 updated++;

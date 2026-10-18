@@ -10,6 +10,7 @@
 #include <QJsonArray>
 #include <QJsonObject>
 #include <QTimer>
+#include <QDebug>
 #include <string>
 
 struct AudioVisualizerServer::Impl {
@@ -22,7 +23,7 @@ struct AudioVisualizerServer::Impl {
     QTimer* timer = nullptr;
     bool running = false;
 
-    Impl() : http_server(&track_store, &runtime_state) {}
+    explicit Impl(const QString& data_dir) : http_server(&track_store, &runtime_state, data_dir) {}
 
     void Broadcast() {
         const std::vector<float> bands = analyzer.GetBands();
@@ -47,8 +48,8 @@ struct AudioVisualizerServer::Impl {
     }
 };
 
-AudioVisualizerServer::AudioVisualizerServer()
-    : impl_(new Impl()) {}
+AudioVisualizerServer::AudioVisualizerServer(const QString& data_dir)
+    : impl_(new Impl(data_dir)) {}
 
 AudioVisualizerServer::~AudioVisualizerServer() {
     Stop();
@@ -83,10 +84,11 @@ bool AudioVisualizerServer::Start(const AudioServerSettings& settings, QString* 
             *error = QString::fromWCharArray(err.c_str());
         }
         impl_->capture.Stop();
-        return false;
+        qWarning() << "[Streamer OS] Audio capture unavailable:" << QString::fromStdWString(capture_error);
+        // Keep the settings panel and visual queue available while the device is disconnected.
     }
 
-    impl_->analyzer.Configure(sample_rate, channels, settings.bands, settings.smoothing);
+    if (capture_ok) impl_->analyzer.Configure(sample_rate, channels, settings.bands, settings.smoothing);
 
     if (!impl_->http_server.Start(settings.http_port, error)) {
         impl_->capture.Stop();

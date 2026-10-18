@@ -10,6 +10,9 @@
 #include <QPushButton>
 #include <QTabWidget>
 #include <QVBoxLayout>
+#include <QCheckBox>
+#include <QDesktopServices>
+#include <QUrl>
 
 void AudioVisualizerDialog::BuildUi() {
     tabs_ = new QTabWidget(this);
@@ -55,6 +58,15 @@ QWidget* AudioVisualizerDialog::BuildServerTab() {
     button_row->addWidget(stop_button_);
     button_row->addWidget(restart_button_);
     form->addRow(button_row);
+    auto_start_ = new QCheckBox("Start runtime with OBS", group);
+    auto_start_->setChecked(true);
+    form->addRow(auto_start_);
+    auto* admin_button = new QPushButton("Open web settings", group);
+    form->addRow(admin_button);
+    connect(admin_button, &QPushButton::clicked, this, []() {
+        QDesktopServices::openUrl(QUrl("http://127.0.0.1:1608/admin"));
+    });
+    connect(auto_start_, &QCheckBox::toggled, this, [this]() { SaveSettings(); });
 
     layout->addWidget(group);
     layout->addStretch(1);

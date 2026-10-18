@@ -25,6 +25,6 @@ cmake --build build-local --config RelWithDebInfo
 
 Готовая DLL: `build-local/bin/64bit/audio-visualizer-plugin.dll`.
 
-Скопируй DLL в `<OBS>/obs-plugins/64bit/`, а содержимое соседней папки `audio-visualizer-plugin` — в `<OBS>/data/obs-plugins/audio-visualizer-plugin/`. Для нативного варианта нужны HTML, userscript и папка icons. `audio_server.exe` и Lua-скрипт ему не нужны.
+Скопируй DLL в `<OBS>/obs-plugins/64bit/`, а содержимое соседней папки `audio-visualizer-plugin` — в `<OBS>/data/obs-plugins/audio-visualizer-plugin/`. Для нативного варианта нужны HTML, JS, CSS и папка icons. В data-каталог также скопируй `Assets/intro_*` из папки персон в подкаталог `assets`. Из корня репозитория `./package.ps1` собирает готовую структуру OBS и скрипты в ZIP. `audio_server.exe` и Lua-скрипт ему не нужны.
 
 Дальше — [настройка OBS](../../../01_Документация/02_Настройка_OBS.md).

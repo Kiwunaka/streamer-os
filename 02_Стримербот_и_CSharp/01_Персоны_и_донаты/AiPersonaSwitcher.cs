@@ -21,7 +21,12 @@ public class CPHInline
         // Keep the legacy globals alive, but make the persona key canonical again.
         CPH.SetGlobalVar("AiSystemPrompt", profile.PersonaKey, true);
         CPH.SetGlobalVar("CurrentPersona", profile.PersonaKey, true);
-        CPH.SetGlobalVar($"Persona_{profile.PersonaKey}_System", profile.SystemPrompt, true);
+        string customPrompt = CPH.GetGlobalVar<string>($"Persona_{profile.PersonaKey}_System", true);
+        if (string.IsNullOrWhiteSpace(customPrompt)) CPH.SetGlobalVar($"Persona_{profile.PersonaKey}_System", profile.SystemPrompt, true);
+        string customVoice = CPH.GetGlobalVar<string>($"Persona_{profile.PersonaKey}_Voice", true);
+        string commonVoice = CPH.GetGlobalVar<string>("ElevenLabsVoiceId", true);
+        if (!string.IsNullOrWhiteSpace(customVoice)) profile.VoiceId = customVoice;
+        else if (!string.IsNullOrWhiteSpace(commonVoice)) profile.VoiceId = commonVoice;
 
         if (!string.IsNullOrEmpty(profile.VoiceId))
         {

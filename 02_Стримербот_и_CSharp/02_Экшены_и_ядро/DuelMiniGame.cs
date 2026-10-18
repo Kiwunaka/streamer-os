@@ -11,6 +11,8 @@ public class CPHInline
 
     public bool Execute()
     {
+        string automation = CPH.GetGlobalVar<string>("AutomationState", true);
+        if (!string.IsNullOrWhiteSpace(automation) && JObject.Parse(automation)["ViewerModes"]?["viewer_modes_enabled"]?.Value<bool>() == false) return true;
         string challenger = ResolveChallenger();
         string opponent = ResolveOpponent(challenger);
 
@@ -251,7 +253,7 @@ public class CPHInline
         JObject players = state["Players"] as JObject ?? new JObject();
         state["Players"] = players;
 
-        JObject player = players[userName] as JObject;
+        JObject player = players.GetValue(userName, StringComparison.OrdinalIgnoreCase) as JObject;
         if (player == null)
         {
             player = new JObject

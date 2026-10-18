@@ -15,3 +15,5 @@
 *.dll
 *.pdb
 .vs/
+
+launcher.local.json

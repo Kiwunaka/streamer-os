@@ -8,13 +8,15 @@ using Newtonsoft.Json.Linq;
 
 public class CPHInline
 {
-    private const string DEFAULT_OPENROUTER_MODEL = "xiaomi/mimo-v2-flash";
+    private const string DEFAULT_OPENROUTER_MODEL = "google/gemini-2.5-flash-lite";
     private const string DEFAULT_FIREWORKS_MODEL = "accounts/fireworks/models/kimi-k2-instruct-0905";
 
     private readonly Random _rng = new Random();
 
     public bool Execute()
     {
+        string automation = CPH.GetGlobalVar<string>("AutomationState", true);
+        if (!string.IsNullOrWhiteSpace(automation) && JObject.Parse(automation)["ViewerModes"]?["viewer_modes_enabled"]?.Value<bool>() == false) return true;
         string mode = ResolveMode();
         string user = ResolveUser();
         string topic = ResolveTopic();

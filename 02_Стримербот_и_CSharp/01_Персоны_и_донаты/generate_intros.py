@@ -1,9 +1,9 @@
-import time, json, base64, struct, requests, os
-
-API_KEY = os.environ.get("OPENROUTER_API_KEY", "")
-URL = "https://openrouter.ai/api/v1/chat/completions"
-H = {"Authorization": f"Bearer {API_KEY}", "Content-Type": "application/json"}
-OUT = os.path.join(os.path.dirname(__file__), "Assets")
+"""Generate a persona intro image. No API call without --generate."""
+import argparse
+import base64
+import io
+import os
+from pathlib import Path
 
 STYLES = {
     "Skuf": (
@@ -14,7 +14,7 @@ STYLES = {
         "Large bold text 'СКУФ' is written clearly at the bottom in striking letters."
     ),
     "Toxic": (
-        "anime illustration, skinny pale teenage boy in oversized black hoodie, "
+        "anime illustration, pale young adult man, age 24 in oversized black hoodie, "
         "hood up half-covering face, messy dark hair with white streak, "
         "red glowing eyes visible under hood, headphones around neck, "
         "sitting in dark room at messy desk with gaming keyboard and mouse, "
@@ -35,60 +35,48 @@ STYLES = {
     )
 }
 
-print("="*50)
-print("  GENERATING INTRO IMAGES FOR PERSONAS")
-print("="*50)
+STYLES["UwU"] = "Original adult anime streamer, age 25, pink hair, cat ear headphones, playful confident smile, pink gaming room, soft neon lighting, centered portrait, square composition. Bold readable Cyrillic text УВУ at the bottom."
 
-total_cost = 0
+def main():
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("--persona", choices=list(STYLES), required=True)
+    parser.add_argument("--model", default="google/gemini-2.5-flash-image")
+    parser.add_argument("--output-dir", type=Path, default=Path(__file__).parent / "Assets")
+    parser.add_argument("--generate", action="store_true", help="Call the paid API; otherwise print the prompt")
+    parser.add_argument("--overwrite", action="store_true")
+    options = parser.parse_args()
+    prompt = STYLES[options.persona]
+    if not options.generate:
+        print(prompt)
+        return
+    target = options.output_dir / ("intro_" + options.persona + ".png")
+    if target.exists() and not options.overwrite:
+        parser.error("Output exists. Use --overwrite to replace it.")
+    key = os.environ.get("OPENROUTER_API_KEY", "")
+    if not key:
+        parser.error("Set OPENROUTER_API_KEY in the environment.")
+    import requests
+    from PIL import Image
+    body = {"model": options.model, "messages": [{"role": "user", "content": prompt}],
+            "modalities": ["image", "text"], "image_config": {"aspect_ratio": "1:1"}}
+    # Submit once. A network timeout may still represent a charged generation.
+    response = requests.post("https://openrouter.ai/api/v1/chat/completions",
+                             headers={"Authorization": "Bearer " + key}, json=body, timeout=90)
+    response.raise_for_status()
+    data = response.json()
+    message = data["choices"][0]["message"]
+    images = message.get("images", [])
+    if not images:
+        raise RuntimeError("The provider returned no image. Check the selected model and request in OpenRouter.")
+    url = images[0]["image_url"]["url"]
+    if not url.startswith("data:image/") or ";base64," not in url:
+        raise RuntimeError("Expected a base64 image from OpenRouter.")
+    binary = base64.b64decode(url.split(",", 1)[1], validate=True)
+    options.output_dir.mkdir(parents=True, exist_ok=True)
+    with Image.open(io.BytesIO(binary)) as image:
+        image.save(target, format="PNG")
+    print("Saved:", target)
+    print("Reported cost:", data.get("usage", {}).get("cost", "not provided"))
 
-for persona, prompt_text in STYLES.items():
-    if persona != "Mistress": continue  # Only regenerate Mistress
-    print(f"\n[IMG] Generating Intro for {persona}...")
-    t0 = time.time()
-    
-    body = {
-        "model": "google/gemini-3.1-flash-image-preview",
-        "messages": [{"role": "user", "content": f"Generate image: {prompt_text}"}],
-        "modalities": ["image", "text"],
-        "image_config": {"aspect_ratio": "1:1", "image_size": "1K"}  # 1K is standard ~1.5MB file
-    }
-    
-    r2 = requests.post(URL, headers=H, json=body, timeout=90)
-    dt2 = time.time() - t0
-
-    if r2.status_code != 200:
-        print(f"  FAIL {r2.status_code}: {r2.text[:150]}")
-        continue
-
-    d2 = r2.json()
-    img_cost = d2.get("usage", {}).get("cost", 0)
-    total_cost += img_cost
-
-    msg2 = d2["choices"][0]["message"]
-    b64 = None
-    if msg2.get("images"):
-        b64 = msg2["images"][0]["image_url"]["url"]
-    if not b64 and isinstance(msg2.get("content"), list):
-        for p2 in msg2["content"]:
-            if p2.get("type") == "image_url":
-                b64 = p2["image_url"]["url"]
-                break
-    if not b64:
-        print("  NO IMAGE (safety filter?)")
-        continue
-
-    rawb = b64.split(",", 1)[-1] if "," in b64 else b64
-    ib = base64.b64decode(rawb)
-    
-    # Check dimensions
-    w, h = struct.unpack('>II', ib[16:24]) if ib[:4] == b'\x89PNG' else (0, 0)
-    
-    fn = f"intro_{persona}.png"
-    out_path = os.path.join(OUT, fn)
-    with open(out_path, "wb") as f:
-        f.write(ib)
-    
-    print(f"  {w}x{h}px | {len(ib)/1024:.0f}KB | {dt2:.1f}s | ${img_cost:.4f}")
-    print(f"  Saved: {out_path}")
-
-print(f"\nTOTAL COST: ${total_cost:.4f}")
+if __name__ == "__main__":
+    main()

@@ -9,7 +9,7 @@ class VisualRuntimeState;
 
 class HttpServer : public QObject {
 public:
-    explicit HttpServer(TrackStore* store, VisualRuntimeState* runtime, QObject* parent = nullptr);
+    explicit HttpServer(TrackStore* store, VisualRuntimeState* runtime, const QString& data_dir = QString(), QObject* parent = nullptr);
     bool Start(quint16 port, QString* error);
     void Stop();
     bool IsRunning() const;
@@ -27,4 +27,5 @@ private:
     VisualRuntimeState* runtime_ = nullptr;
     QTcpServer* server_ = nullptr;
     QHash<QTcpSocket*, QByteArray> buffers_;
+    QString data_dir_;
 };

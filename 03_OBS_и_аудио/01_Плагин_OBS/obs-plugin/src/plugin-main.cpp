@@ -19,7 +19,12 @@ const char* obs_module_description(void) {
 bool obs_module_load(void) {
     auto* parent = static_cast<QWidget*>(obs_frontend_get_main_window());
     g_dialog = new AudioVisualizerDialog(parent);
-    obs_frontend_add_dock_by_id(kDockId, "Streamer OS Runtime", g_dialog);
+    if (!obs_frontend_add_dock_by_id(kDockId, "Streamer OS Runtime", g_dialog)) {
+        delete g_dialog;
+        g_dialog = nullptr;
+        return false;
+    }
+    QObject::connect(g_dialog, &QObject::destroyed, []() { g_dialog = nullptr; });
 
     g_action = static_cast<QAction*>(obs_frontend_add_tools_menu_qaction("Streamer OS Runtime"));
     QObject::connect(g_action, &QAction::triggered, []() {
@@ -35,6 +40,6 @@ bool obs_module_load(void) {
 
 void obs_module_unload(void) {
     obs_frontend_remove_dock(kDockId);
-    delete g_dialog;
+    // OBS owns the dock and deletes its child widget during remove_dock.
     g_dialog = nullptr;
 }
