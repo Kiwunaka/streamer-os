@@ -1,5 +1,7 @@
 # Настройка OBS
 
+Полный порядок установки и запуск панели — [начать здесь](../START-HERE.md).
+
 ## Где лежит OBS-часть проекта
 
 - [03_OBS_и_аудио](../03_OBS_и_аудио)
@@ -11,9 +13,10 @@
 
 ## Если DLL уже собрана
 
-1. Скопируй [audio-visualizer-plugin.dll](../03_OBS_и_аудио/01_Плагин_OBS/obs-plugin/build-local/bin/64bit/audio-visualizer-plugin.dll) в `obs-studio/obs-plugins/64bit/`
+1. Скопируй `audio-visualizer-plugin.dll` из готового пакета (`OBS/obs-plugins/64bit`) или из своей сборки (`obs-plugin/build-local/bin/64bit`) в `obs-studio/obs-plugins/64bit/`
 2. Скопируй [audio-visualizer-plugin](../03_OBS_и_аудио/01_Плагин_OBS/audio-visualizer-plugin) в `obs-studio/data/obs-plugins/audio-visualizer-plugin/`
-3. Перезапусти OBS
+3. Для ручной установки скопируй `Assets/intro_*` из папки персон в `obs-studio/data/obs-plugins/audio-visualizer-plugin/assets/`. В готовом пакете это уже сделано.
+4. Перезапусти OBS
 
 ## Если хочешь собрать плагин сам
 
