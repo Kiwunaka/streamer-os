@@ -1,0 +1,17 @@
+**/google_key.json
+.env
+.env.*
+**/.git/
+**/.deps/
+**/obs-studio/
+**/tools/
+**/build*/
+**/bin/
+**/obj/
+**/dist/
+**/__pycache__/
+*.pyc
+*.exe
+*.dll
+*.pdb
+.vs/

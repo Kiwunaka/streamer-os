@@ -1,0 +1,1683 @@
+<!DOCTYPE html>
+<html lang="ru">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CINEMA OVERLAY v2</title>
+
+    <!-- LIBRARIES -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/animejs/3.2.2/anime.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.2/dist/confetti.browser.min.js"></script>
+
+    <!-- SVG FILTERS (GOD MODE FOUNDATION) -->
+    <svg style="visibility: hidden; position: absolute;" width="0" height="0">
+        <filter id="noiseFilter">
+            <feTurbulence type="fractalNoise" baseFrequency="0.65" numOctaves="3" stitchTiles="stitch" />
+        </filter>
+        <filter id="grain">
+            <feTurbulence type="turbulence" baseFrequency="0.05" numOctaves="2" result="turbulence" />
+            <feDisplacementMap in2="turbulence" in="SourceGraphic" scale="2" xChannelSelector="R"
+                yChannelSelector="G" />
+        </filter>
+    </svg>
+
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;700&family=Outfit:wght@400;700;900&family=Orbitron:wght@400;700;900&family=Creepster&family=Pacifico&display=swap');
+
+        :root {
+            --accent-color: #ffffff;
+            --text-color: #ffffff;
+            --glow-color: rgba(255, 255, 255, 0.5);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            overflow: hidden;
+            font-family: 'Outfit', sans-serif;
+            background: transparent;
+            height: 100vh;
+            width: 100vw;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        #flash-overlay {
+            position: fixed;
+            inset: 0;
+            background: var(--glow-color);
+            opacity: 0;
+            pointer-events: none;
+            z-index: 10000;
+        }
+
+        /* GOD MODE: CINEMATIC NOISE & TEXTURES */
+        body::before {
+            content: "";
+            position: fixed;
+            inset: 0;
+            z-index: 9999;
+            opacity: 0.12;
+            pointer-events: none;
+            filter: url(#noiseFilter);
+            mix-blend-mode: overlay;
+            animation: grainShift 8s steps(10) infinite;
+        }
+
+        @keyframes grainShift {
+
+            0%,
+            100% {
+                transform: translate(0, 0);
+            }
+
+            10% {
+                transform: translate(-5%, -5%);
+            }
+
+            20% {
+                transform: translate(-10%, 5%);
+            }
+
+            30% {
+                transform: translate(5%, -10%);
+            }
+
+            40% {
+                transform: translate(-5%, 15%);
+            }
+
+            50% {
+                transform: translate(-10%, 5%);
+            }
+
+            60% {
+                transform: translate(15%, 0%);
+            }
+
+            70% {
+                transform: translate(0, 10%);
+            }
+
+            80% {
+                transform: translate(-15%, 0%);
+            }
+
+            90% {
+                transform: translate(10%, 5%);
+            }
+        }
+
+        .shockwave {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            border: 3px solid var(--accent-color);
+            transform: translate(-50%, -50%) scale(0);
+            opacity: 0;
+            pointer-events: none;
+            z-index: 9999;
+        }
+
+        #overlay-container {
+            position: relative;
+            display: flex;
+            align-items: center;
+            background: rgba(12, 12, 22, 0.75);
+            backdrop-filter: blur(60px) saturate(200%) brightness(1.05);
+            -webkit-backdrop-filter: blur(60px) saturate(200%) brightness(1.05);
+            border: 1px solid rgba(255, 255, 255, 0.12);
+            border-radius: 40px;
+            padding: 50px 70px;
+            max-width: 1600px;
+            box-shadow:
+                0 60px 120px rgba(0, 0, 0, 0.9),
+                0 20px 60px rgba(0, 0, 0, 0.5),
+                0 0 80px -20px var(--glow-color),
+                inset 0 1px 1px rgba(255, 255, 255, 0.15),
+                inset 0 -1px 1px rgba(0, 0, 0, 0.3);
+            opacity: 0;
+            transform: scale(0.7) translateY(150px);
+            overflow: hidden;
+            transition: all 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+
+        #mesh-bg {
+            position: absolute;
+            inset: 0;
+            z-index: -1;
+            opacity: 0.6;
+            transition: opacity 1s, background 2s ease;
+        }
+
+        #overlay-container.active {
+            opacity: 1;
+            transform: scale(1) translateY(0);
+        }
+
+        #avatar-wrapper {
+            position: relative;
+            width: 400px;
+            height: 400px;
+            margin-right: 50px;
+            flex-shrink: 0;
+        }
+
+        #avatar-container {
+            width: 100%;
+            height: 100%;
+            border-radius: 30px;
+            background-size: cover;
+            background-position: center;
+            position: relative;
+            z-index: 2;
+            transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.5s ease;
+            opacity: 0;
+            transform: scale(0);
+            transition: transform 0.1s ease-out;
+        }
+
+        /* Talking animation when audio is playing */
+        @keyframes talkingPulse {
+
+            0%,
+            100% {
+                transform: scale(1);
+            }
+
+            25% {
+                transform: scale(1.03);
+            }
+
+            50% {
+                transform: scale(0.98);
+            }
+
+            75% {
+                transform: scale(1.02);
+            }
+        }
+
+        #avatar-container.talking {
+            animation: talkingPulse 0.4s ease-in-out infinite;
+        }
+
+        .avatar-glow {
+            position: absolute;
+            top: -40px;
+            left: -40px;
+            right: -40px;
+            bottom: -40px;
+            border-radius: 60px;
+            z-index: 1;
+            opacity: 0;
+            filter: blur(50px);
+            transition: opacity 0.1s;
+        }
+
+        .avatar-ring {
+            position: absolute;
+            inset: -15px;
+            border-radius: 45px;
+            border: 3px solid var(--accent-color);
+            opacity: 0;
+            z-index: 3;
+        }
+
+        /* Audio Visualizer Ring */
+        #audio-ring {
+            position: absolute;
+            inset: -25px;
+            border-radius: 50%;
+            border: 4px solid var(--accent-color);
+            opacity: 0;
+            z-index: 4;
+            transition: transform 0.05s, opacity 0.3s;
+        }
+
+        #content-container {
+            display: flex;
+            flex-direction: column;
+            max-width: 900px;
+            position: relative;
+            z-index: 5;
+        }
+
+        #user-name {
+            font-size: 42px;
+            font-weight: 900;
+            text-transform: uppercase;
+            letter-spacing: 6px;
+            color: var(--accent-color);
+            margin-bottom: 20px;
+            opacity: 0;
+        }
+
+        #message-text {
+            font-size: 46px;
+            font-weight: 600;
+            line-height: 1.35;
+            color: var(--text-color);
+            opacity: 0;
+            text-wrap: balance;
+            letter-spacing: -0.3px;
+        }
+
+        /* TALKING ANIMATION (CSS pulse) */
+        #avatar-container.talking {
+            animation: talkPulse 0.4s ease-in-out infinite alternate;
+        }
+
+        @keyframes talkPulse {
+            0% {
+                transform: scale(1);
+            }
+
+            100% {
+                transform: scale(1.03);
+            }
+        }
+
+        /* ═══════════════════════════════════════════════════════════════════
+           PERSONA THEMES
+        ═══════════════════════════════════════════════════════════════════ */
+
+        /* SKUF */
+        @keyframes skufSway {
+
+            0%,
+            100% {
+                transform: rotate(-2deg) translateX(-3px);
+            }
+
+            50% {
+                transform: rotate(2deg) translateX(3px);
+            }
+        }
+
+        @keyframes skufGlow {
+
+            0%,
+            100% {
+                box-shadow: 0 0 30px rgba(255, 170, 0, 0.5);
+            }
+
+            50% {
+                box-shadow: 0 0 60px rgba(255, 170, 0, 0.8);
+            }
+        }
+
+        .theme-Skuf {
+            --accent-color: #ffaa33;
+            --glow-color: rgba(255, 150, 0, 0.4);
+        }
+
+        .theme-Skuf #mesh-bg {
+            background:
+                radial-gradient(at 0% 0%, rgba(255, 170, 0, 0.15) 0px, transparent 50%),
+                radial-gradient(at 100% 100%, rgba(100, 50, 0, 0.2) 0px, transparent 50%),
+                radial-gradient(at 50% 50%, rgba(40, 20, 0, 0.3) 0px, transparent 80%);
+        }
+
+        .theme-Skuf #avatar-container {
+            border-radius: 30px;
+            border: 4px solid #ffaa00;
+            box-shadow: 0 0 40px rgba(255, 170, 0, 0.3);
+            animation: skufSway 5s ease-in-out infinite;
+        }
+
+        .theme-Skuf .avatar-glow {
+            background: radial-gradient(circle, rgba(255, 170, 0, 0.6), transparent 70%);
+            animation: skufGlow 3s ease-in-out infinite;
+            filter: blur(60px);
+        }
+
+        .theme-Skuf #user-name {
+            color: #ffaa33;
+            text-shadow: 0 0 20px rgba(255, 170, 0, 0.5), 2px 2px 4px rgba(0, 0, 0, 0.5);
+            font-weight: 900;
+        }
+
+        .theme-Skuf #message-text {
+            color: #ffe8cc;
+            text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.4);
+        }
+
+        /* UWU */
+        @keyframes uwuBounce {
+
+            0%,
+            100% {
+                transform: translateY(0) scale(1);
+            }
+
+            50% {
+                transform: translateY(-15px) scale(1.05);
+            }
+        }
+
+        @keyframes uwuRainbow {
+            0% {
+                border-color: #ff77ff;
+            }
+
+            25% {
+                border-color: #77ffff;
+            }
+
+            50% {
+                border-color: #77ff77;
+            }
+
+            75% {
+                border-color: #ffff77;
+            }
+
+            100% {
+                border-color: #ff77ff;
+            }
+        }
+
+        @keyframes borderGradient {
+            0% {
+                background-position: 0% 50%;
+            }
+
+            100% {
+                background-position: 200% 50%;
+            }
+        }
+
+        .theme-UwU {
+            --accent-color: #ff99ff;
+            --glow-color: rgba(255, 153, 255, 0.3);
+        }
+
+        .theme-UwU #mesh-bg {
+            background:
+                radial-gradient(at 0% 100%, rgba(255, 153, 255, 0.2) 0px, transparent 50%),
+                radial-gradient(at 100% 0%, rgba(153, 255, 255, 0.2) 0px, transparent 50%),
+                radial-gradient(at 50% 50%, rgba(100, 0, 150, 0.25) 0px, transparent 80%);
+        }
+
+        .theme-UwU #overlay-container::before {
+            content: '';
+            position: absolute;
+            inset: -2px;
+            border-radius: 42px;
+            background: linear-gradient(45deg, #ff99ff, #99ffff, #ff99ff, #ffff99, #ff99ff);
+            background-size: 400% 400%;
+            animation: borderGradient 10s linear infinite;
+            z-index: -1;
+            opacity: 0.4;
+        }
+
+        .theme-UwU #avatar-container {
+            border-radius: 50%;
+            border: 6px solid #fff;
+            box-shadow: 0 0 30px #ff99ff, inset 0 0 20px #ff99ff;
+            animation: uwuBounce 4s ease-in-out infinite, uwuRainbow 8s linear infinite;
+        }
+
+        .theme-UwU .avatar-glow {
+            background: radial-gradient(circle, rgba(255, 153, 255, 0.6), rgba(153, 255, 255, 0.3) 60%, transparent 80%);
+            filter: blur(70px);
+        }
+
+        .theme-UwU #user-name {
+            font-family: 'Pacifico', cursive;
+            font-size: 52px;
+            color: #fff;
+            text-shadow: 0 0 20px #ff99ff, 0 0 40px #ff99ff;
+            letter-spacing: 2px;
+        }
+
+        .theme-UwU #message-text {
+            color: #fff5ff;
+            text-shadow: 0 0 10px rgba(255, 153, 255, 0.2);
+        }
+
+        /* TOXIC - Soft glitch effect */
+        @keyframes toxicGlitch {
+
+            0%,
+            100% {
+                transform: translate(0);
+                filter: none;
+            }
+
+            15% {
+                transform: translate(-1px, 0);
+            }
+
+            30% {
+                transform: translate(1px, 0);
+                filter: hue-rotate(5deg);
+            }
+
+            45% {
+                transform: translate(0);
+            }
+
+            60% {
+                transform: translate(-1px, 1px);
+            }
+
+            75% {
+                transform: translate(1px, -1px);
+                filter: hue-rotate(-5deg);
+            }
+
+            90% {
+                transform: translate(0);
+            }
+        }
+
+        @keyframes toxicPulse {
+
+            0%,
+            100% {
+                box-shadow: 0 0 20px #39ff14;
+            }
+
+            50% {
+                box-shadow: 0 0 50px #39ff14;
+            }
+        }
+
+        @keyframes toxicFlicker {
+
+            0%,
+            100% {
+                opacity: 1;
+            }
+
+            92%,
+            96% {
+                opacity: 0.4;
+            }
+
+            94%,
+            98% {
+                opacity: 1;
+            }
+        }
+
+        .theme-Toxic {
+            --accent-color: #39ff14;
+            --glow-color: rgba(57, 255, 20, 0.2);
+            font-family: 'Orbitron', monospace;
+        }
+
+        .theme-Toxic #mesh-bg {
+            background:
+                radial-gradient(at 0% 0%, rgba(0, 255, 0, 0.1) 0px, transparent 50%),
+                radial-gradient(at 50% 100%, rgba(0, 50, 0, 0.3) 0px, transparent 80%);
+        }
+
+        .theme-Toxic #overlay-container::after {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(0, 255, 0, 0.05) 2px, rgba(0, 255, 0, 0.05) 4px);
+            pointer-events: none;
+            border-radius: 40px;
+            z-index: 10;
+        }
+
+        .theme-Toxic #avatar-container {
+            border-radius: 12px;
+            border: 2px solid #39ff14;
+            box-shadow: 0 0 20px rgba(57, 255, 20, 0.5);
+            animation: toxicGlitch 3s ease-in-out infinite, toxicPulse 2s ease-in-out infinite;
+        }
+
+        .theme-Toxic .avatar-glow {
+            background: radial-gradient(circle, rgba(57, 255, 20, 0.4), transparent 70%);
+            filter: blur(50px);
+        }
+
+        .theme-Toxic #user-name {
+            font-family: 'Orbitron';
+            color: #39ff14;
+            text-shadow: 0 0 10px #39ff14, 0 0 20px #39ff14;
+            letter-spacing: 12px;
+            font-weight: 900;
+        }
+
+        .theme-Toxic #message-text {
+            color: #bdffbd;
+            font-family: 'Orbitron';
+            text-shadow: 0 0 5px rgba(57, 255, 20, 0.4);
+        }
+
+        /* MISTRESS */
+        @keyframes mistressHeartbeat {
+
+            0%,
+            40%,
+            100% {
+                transform: scale(1);
+            }
+
+            10%,
+            25% {
+                transform: scale(1.04);
+            }
+        }
+
+        @keyframes mistressFire {
+
+            0%,
+            100% {
+                filter: brightness(1);
+            }
+
+            25% {
+                filter: brightness(1.2);
+            }
+
+            50% {
+                filter: brightness(0.9);
+            }
+
+            75% {
+                filter: brightness(1.15);
+            }
+        }
+
+        @keyframes mistressGlow {
+
+            0%,
+            100% {
+                box-shadow: 0 0 30px rgba(255, 0, 0, 0.5);
+            }
+
+            50% {
+                box-shadow: 0 0 60px rgba(255, 0, 0, 0.8);
+            }
+        }
+
+        .theme-Mistress {
+            --accent-color: #ff1111;
+            --glow-color: rgba(255, 0, 0, 0.2);
+        }
+
+        .theme-Mistress #mesh-bg {
+            background:
+                radial-gradient(at 100% 0%, rgba(200, 0, 0, 0.2) 0px, transparent 50%),
+                radial-gradient(at 0% 100%, rgba(50, 0, 0, 0.3) 0px, transparent 80%);
+        }
+
+        .theme-Mistress #avatar-container {
+            border-radius: 20px;
+            border: 3px solid #ff0000;
+            box-shadow: 0 0 30px rgba(255, 0, 0, 0.4);
+            animation: mistressHeartbeat 1.5s ease-in-out infinite;
+        }
+
+        .theme-Mistress .avatar-glow {
+            background: radial-gradient(circle, rgba(255, 0, 0, 0.6), transparent 70%);
+            animation: mistressGlow 4s ease-in-out infinite;
+            filter: blur(80px);
+        }
+
+        .theme-Mistress #user-name {
+            font-family: 'Creepster';
+            font-size: 56px;
+            color: #ff1111;
+            text-shadow: 0 0 15px #ff0000, 0 0 40px #ff0000, 2px 2px 10px #000;
+            letter-spacing: 4px;
+        }
+
+        .theme-Mistress #message-text {
+            color: #ffbaba;
+            font-weight: 500;
+            text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.8);
+        }
+
+        /* ═══════════════════════════════════════════════════════════════════
+           PARTICLES
+        ═══════════════════════════════════════════════════════════════════ */
+        .particles-layer {
+            position: absolute;
+            inset: 0;
+            pointer-events: none;
+            overflow: hidden;
+            z-index: 0;
+            border-radius: 40px;
+        }
+
+        @keyframes rise {
+            0% {
+                transform: translateY(0) scale(1);
+                opacity: 0;
+            }
+
+            10% {
+                opacity: 1;
+            }
+
+            100% {
+                transform: translateY(-400px) scale(0.3);
+                opacity: 0;
+            }
+        }
+
+        @keyframes heartFloat {
+            0% {
+                transform: translateY(0) scale(0);
+                opacity: 0;
+            }
+
+            10% {
+                opacity: 1;
+                transform: translateY(-30px) scale(1);
+            }
+
+            100% {
+                transform: translateY(-450px) scale(0.3) rotate(360deg);
+                opacity: 0;
+            }
+        }
+
+        @keyframes matrixFall {
+            0% {
+                transform: translateY(-100%);
+                opacity: 0;
+            }
+
+            5% {
+                opacity: 0.6;
+            }
+
+            100% {
+                transform: translateY(100%);
+                opacity: 0;
+            }
+        }
+
+        @keyframes ember {
+            0% {
+                transform: translateY(0);
+                opacity: 0;
+            }
+
+            10% {
+                opacity: 1;
+            }
+
+            100% {
+                transform: translateY(-400px) scale(0);
+                opacity: 0;
+            }
+        }
+
+        @keyframes sparkle {
+
+            0%,
+            100% {
+                transform: scale(0);
+                opacity: 0;
+            }
+
+            50% {
+                transform: scale(1) rotate(180deg);
+                opacity: 1;
+            }
+        }
+
+        @keyframes chainSwing {
+
+            0%,
+            100% {
+                transform: rotate(-8deg);
+            }
+
+            50% {
+                transform: rotate(8deg);
+            }
+        }
+
+        @keyframes bloodDrip {
+            0% {
+                height: 0;
+                opacity: 0;
+            }
+
+            10% {
+                opacity: 1;
+            }
+
+            100% {
+                height: 120px;
+                opacity: 0;
+            }
+        }
+
+        @keyframes scan {
+            0% {
+                top: -5%;
+            }
+
+            100% {
+                top: 105%;
+            }
+        }
+
+        /* ═══════════════════════════════════════════════════════════════════
+           OVERLAY FX EFFECTS (from AiDonationHandler)
+        ═══════════════════════════════════════════════════════════════════ */
+        @keyframes fxShake {
+
+            0%,
+            100% {
+                transform: translateX(0);
+            }
+
+            10%,
+            30%,
+            50%,
+            70%,
+            90% {
+                transform: translateX(-8px);
+            }
+
+            20%,
+            40%,
+            60%,
+            80% {
+                transform: translateX(8px);
+            }
+        }
+
+        @keyframes fxGlitch {
+
+            0%,
+            100% {
+                transform: translate(0);
+                filter: none;
+            }
+
+            10% {
+                transform: translate(-2px, 1px);
+                filter: hue-rotate(90deg);
+            }
+
+            20% {
+                transform: translate(2px, -1px);
+                clip-path: inset(20% 0 40% 0);
+            }
+
+            30% {
+                transform: translate(-1px, 2px);
+                filter: hue-rotate(-90deg);
+            }
+
+            40% {
+                transform: translate(0);
+                clip-path: inset(60% 0 10% 0);
+            }
+
+            50% {
+                transform: translate(1px, -2px);
+                filter: saturate(2);
+            }
+
+            60% {
+                transform: translate(-2px, 0);
+                clip-path: none;
+            }
+
+            70% {
+                transform: translate(0, 1px);
+                filter: brightness(1.5);
+            }
+
+            80% {
+                transform: translate(2px, 0);
+                filter: none;
+            }
+        }
+
+        #overlay-container.fx-shake {
+            animation: fxShake 0.5s ease-in-out 3;
+        }
+
+        #overlay-container.fx-glitch {
+            animation: fxGlitch 0.3s linear 5;
+        }
+
+        /* ═══════════════════════════════════════════════════════════════════
+           UI
+        ═══════════════════════════════════════════════════════════════════ */
+        #status-dot {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            background: rgba(255, 0, 0, 0.4);
+            z-index: 1000;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            transition: all 0.3s;
+        }
+
+        #status-dot:hover {
+            background: red;
+            box-shadow: 0 0 15px currentColor;
+        }
+
+        #debug-panel {
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            background: rgba(10, 10, 15, 0.4);
+            backdrop-filter: blur(20px);
+            padding: 12px;
+            border-radius: 16px;
+            display: flex;
+            gap: 10px;
+            z-index: 9999;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            transition: opacity 0.3s;
+        }
+
+        #debug-panel:hover {
+            background: rgba(10, 10, 15, 0.8);
+            border-color: rgba(255, 255, 255, 0.1);
+        }
+
+        .debug-btn {
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            color: rgba(255, 255, 255, 0.4);
+            padding: 8px 16px;
+            cursor: pointer;
+            border-radius: 8px;
+            font-size: 11px;
+            font-weight: 700;
+            letter-spacing: 2px;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            text-transform: uppercase;
+        }
+
+        .debug-btn:hover {
+            background: rgba(255, 255, 255, 0.1);
+            color: #fff;
+            border-color: rgba(255, 255, 255, 0.3);
+            transform: translateY(-2px);
+        }
+
+        .debug-btn.skuf {
+            color: #ffaa33;
+        }
+
+        .debug-btn.uwu {
+            color: #ff99ff;
+        }
+
+        .debug-btn.toxic {
+            color: #39ff14;
+        }
+
+        .debug-btn.mistress {
+            color: #ff1111;
+        }
+
+        .debug-btn.mod {
+            background: rgba(255, 0, 0, 0.1);
+            border-color: rgba(255, 0, 0, 0.2);
+        }
+
+        #loading-state {
+            position: fixed;
+            bottom: 40px;
+            right: 40px;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            background: rgba(0, 0, 0, 0.7);
+            backdrop-filter: blur(15px);
+            padding: 18px 30px;
+            border-radius: 50px;
+            opacity: 0;
+            transform: translateY(20px);
+            transition: all 0.5s;
+        }
+
+        #loading-state.active {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        .loading-icon {
+            width: 26px;
+            height: 26px;
+            border: 3px solid transparent;
+            border-top-color: var(--accent-color);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            to {
+                transform: rotate(360deg);
+            }
+        }
+
+        #mod-alert {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%) scale(0.9);
+            width: min(1000px, 92vw);
+            z-index: 20000;
+            display: none;
+            align-items: center;
+            gap: 35px;
+            padding: 40px;
+            border-radius: 32px;
+            background: rgba(15, 15, 25, 0.9);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            box-shadow: 0 50px 120px rgba(0, 0, 0, 0.8);
+            backdrop-filter: blur(25px) saturate(150%);
+            -webkit-backdrop-filter: blur(25px) saturate(150%);
+            opacity: 0;
+            transition: all 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+
+        #mod-alert.active {
+            display: flex;
+            opacity: 1;
+            transform: translate(-50%, -50%) scale(1);
+        }
+
+        #mod-image {
+            width: 45%;
+            min-width: 260px;
+            max-width: 380px;
+            border-radius: 16px;
+            border: 2px solid rgba(255, 255, 255, 0.2);
+            box-shadow: 0 12px 40px rgba(0, 0, 0, 0.6);
+            object-fit: cover;
+        }
+
+        #mod-text {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            color: #fff;
+        }
+
+        #mod-title {
+            font-size: 18px;
+            letter-spacing: 4px;
+            text-transform: uppercase;
+            color: var(--accent-color);
+            font-weight: 800;
+        }
+
+        #mod-message {
+            font-size: 26px;
+            font-weight: 700;
+            line-height: 1.25;
+        }
+
+
+
+        @media (max-width: 720px) {
+            #mod-alert {
+                flex-direction: column;
+                text-align: center;
+            }
+
+            #mod-image {
+                width: 100%;
+                max-width: 520px;
+            }
+        }
+
+        #history-widget {
+            margin-top: 35px;
+            padding-top: 25px;
+            border-top: 1px solid rgba(255, 255, 255, 0.08);
+            opacity: 0;
+            transform: translateY(15px);
+        }
+
+        .history-title {
+            font-size: 13px;
+            color: var(--accent-color);
+            opacity: 0.6;
+            text-transform: uppercase;
+            letter-spacing: 4px;
+            margin-bottom: 12px;
+            font-weight: 800;
+        }
+
+        .history-item {
+            font-size: 16px;
+            color: rgba(255, 255, 255, 0.8);
+            padding: 4px 0;
+            line-height: 1.4;
+            border-left: 2px solid transparent;
+            padding-left: 0;
+            transition: all 0.2s;
+        }
+
+        .history-item:hover {
+            color: #fff;
+            padding-left: 8px;
+            border-left-color: var(--accent-color);
+        }
+    </style>
+</head>
+
+<body>
+    <div id="flash-overlay"></div>
+
+    <div id="debug-panel">
+        <button class="debug-btn skuf" onclick="testRotation('Skuf')">🍺 SKUF</button>
+        <button class="debug-btn uwu" onclick="testRotation('UwU')">💖 UWU</button>
+        <button class="debug-btn toxic" onclick="testRotation('Toxic')">☣️ TOXIC</button>
+        <button class="debug-btn mistress" onclick="testRotation('Mistress')">🔴 MISTRESS</button>
+        <button class="debug-btn mod" onclick="testModerator()">⚠️ MOD</button>
+    </div>
+
+    <div id="status-dot"></div>
+    <div id="mod-alert">
+        <img id="mod-image" src="" alt="ALERT">
+        <div id="mod-text"></div>
+    </div>
+
+    <div id="loading-state">
+        <div class="loading-icon"></div>
+        <div style="color:white;font-size:14px;text-transform:uppercase;letter-spacing:1px;">НЕЙРОСЕТЬ ДУМАЕТ...</div>
+    </div>
+    <audio id="ai-audio" style="display:none;"></audio>
+
+
+    <div id="overlay-container">
+        <div id="mesh-bg"></div>
+        <div id="avatar-wrapper">
+            <div class="avatar-glow"></div>
+            <div class="avatar-ring"></div>
+            <div id="avatar-container"></div>
+        </div>
+        <div id="content-container">
+            <div id="user-name">ОТВЕТ ИИ</div>
+            <p id="message-text">...</p>
+            <div id="history-widget">
+                <div class="history-title">ПОСЛЕДНИЕ СОБЫТИЯ</div>
+                <div id="history-list"></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let hideTimeout, currentRequestId = null, audioLoadTimeout = null;
+        let currentPersona = null;
+        const DEBUG_MODE = true;
+
+        const debugDiv = document.createElement('div');
+        if (DEBUG_MODE) {
+            debugDiv.style.cssText = 'position:fixed;top:140px;left:20px;color:#0f0;background:rgba(0,0,0,0.95);padding:14px;max-width:380px;font:12px Orbitron,monospace;z-index:9999;border-radius:12px;border:1px solid #39ff14;';
+            debugDiv.innerText = "WAITING...";
+            document.body.appendChild(debugDiv);
+        }
+        function logDebug(m) { if (DEBUG_MODE) { console.log(m); debugDiv.innerText = m.substring(0, 300); } }
+
+        const WS_URL = "ws://127.0.0.1:7474/";
+        let socket;
+        // ═══════════════════════════════════════════════════════════════════
+        // SIMPLE TALKING ANIMATION (CSS-based, no Web Audio API)
+        // ═══════════════════════════════════════════════════════════════════
+        let talkingActive = false;
+
+        function startTalking() {
+            if (talkingActive) return;
+            talkingActive = true;
+            const avatar = document.getElementById('avatar-container');
+            const ring = document.getElementById('audio-ring');
+            if (avatar) avatar.classList.add('talking');
+            if (ring) ring.style.opacity = '0.8';
+            logDebug("Talking started");
+        }
+
+        function stopTalking() {
+            talkingActive = false;
+            const avatar = document.getElementById('avatar-container');
+            const ring = document.getElementById('audio-ring');
+            if (avatar) avatar.classList.remove('talking');
+            if (ring) ring.style.opacity = '0';
+            logDebug("Talking stopped");
+        }
+
+        // ═══════════════════════════════════════════════════════════════════
+        // ANIME.JS CINEMATIC
+        // ═══════════════════════════════════════════════════════════════════
+        function cinematicEntrance(persona) {
+            const container = document.getElementById('overlay-container');
+            const avatar = document.getElementById('avatar-container');
+            const glow = document.querySelector('.avatar-glow');
+            const ring = document.querySelector('.avatar-ring');
+            const name = document.getElementById('user-name');
+            const text = document.getElementById('message-text');
+            const mesh = document.getElementById('mesh-bg');
+            const flash = document.getElementById('flash-overlay');
+
+            // Flash burst on entrance
+            if (flash) {
+                anime({ targets: flash, opacity: [0.5, 0], duration: 600, easing: 'easeOutExpo' });
+            }
+
+            // Character-by-character reveal setup (Unicode-aware for emojis)
+            const rawText = text.innerText;
+            text.innerHTML = '';
+            text.style.opacity = '1';
+            [...rawText].forEach(char => {
+                const span = document.createElement('span');
+                span.className = 'char';
+                span.style.opacity = '0';
+                span.style.display = 'inline-block';
+                span.innerHTML = char === ' ' ? '&nbsp;' : char;
+                text.appendChild(span);
+            });
+
+            // Cinematic Spring Entrance (smoother spring)
+            anime({
+                targets: container,
+                opacity: [0, 1],
+                scale: [0.65, 1.03, 1],
+                translateY: [120, -8, 0],
+                duration: 1500,
+                easing: 'easeOutElastic(1, .7)'
+            });
+
+            if (mesh) anime({ targets: mesh, opacity: [0, 0.7], duration: 2000, easing: 'easeOutQuad' });
+
+            // Avatar entrance with bounce
+            anime({
+                targets: avatar,
+                opacity: [0, 1],
+                scale: [0, 1.08, 1],
+                rotate: [-8, 3, 0],
+                duration: 1300,
+                delay: 200,
+                easing: 'easeOutElastic(1, .5)'
+            });
+
+            // Glow pulse on entrance
+            if (glow) {
+                anime({
+                    targets: glow,
+                    opacity: [0, 1, 0.7],
+                    scale: [0.5, 1.3, 1],
+                    duration: 1800,
+                    delay: 150,
+                    easing: 'easeOutQuad'
+                });
+            }
+
+            anime({
+                targets: ring,
+                opacity: [0, 0.9, 0.7],
+                scale: [0.6, 1.15, 1],
+                duration: 1100,
+                delay: 300,
+                easing: 'easeOutExpo'
+            });
+
+            // Name Entrance (slide + fade)
+            anime({
+                targets: name,
+                opacity: [0, 1],
+                translateX: [50, 0],
+                translateY: [10, 0],
+                duration: 900,
+                delay: 400,
+                easing: 'easeOutQuart'
+            });
+
+            // Character Reveal (smoother wave)
+            anime({
+                targets: '#message-text .char',
+                opacity: [0, 1],
+                translateY: [12, 0],
+                scale: [0.8, 1],
+                filter: ['blur(6px)', 'blur(0px)'],
+                delay: anime.stagger(18, { start: 650 }),
+                duration: 450,
+                easing: 'easeOutCubic'
+            });
+
+            anime({
+                targets: '#history-widget',
+                opacity: [0, 1],
+                translateY: [15, 0],
+                duration: 800,
+                delay: 850,
+                easing: 'easeOutQuad'
+            });
+
+            createShockwave();
+            triggerConfetti(persona);
+        }
+
+        function cinematicExit() {
+            const container = document.getElementById('overlay-container');
+            const flash = document.getElementById('flash-overlay');
+
+            // Subtle flash on exit
+            if (flash) {
+                anime({ targets: flash, opacity: [0.15, 0], duration: 400, easing: 'easeOutQuad' });
+            }
+
+            anime({
+                targets: container,
+                opacity: [1, 0],
+                scale: [1, 0.85],
+                translateY: [0, -60],
+                filter: ['blur(0px)', 'blur(8px)'],
+                duration: 500,
+                easing: 'easeInQuad',
+                complete: () => {
+                    container.classList.remove('active');
+                    container.style.display = 'none';
+                    container.style.filter = 'none';
+                    clearParticles();
+                }
+            });
+        }
+
+        function createShockwave() {
+            const wave = document.createElement('div');
+            wave.className = 'shockwave';
+            document.body.appendChild(wave);
+            anime({ targets: wave, scale: [0, 100], opacity: [0.6, 0], duration: 800, easing: 'easeOutQuad', complete: () => wave.remove() });
+        }
+
+        function triggerConfetti(persona) {
+            const colors = { Skuf: ['#ffaa00', '#ff8800', '#ffcc00'], UwU: ['#ff77ff', '#77ffff', '#ff99ff'], Toxic: ['#39ff14', '#00ff00'], Mistress: ['#ff0000', '#ff3300', '#ff6600'] };
+            confetti({ particleCount: 100, spread: 90, origin: { y: 0.6 }, colors: colors[persona] || ['#fff'] });
+        }
+
+        // ═══════════════════════════════════════════════════════════════════
+        // OVERLAY FX (from AiDonationHandler: shake, glitch, rain, confetti)
+        // ═══════════════════════════════════════════════════════════════════
+        function clearOverlayFX() {
+            const c = document.getElementById('overlay-container');
+            c.classList.remove('fx-shake', 'fx-glitch');
+        }
+
+        function applyOverlayFX(fxType, persona) {
+            if (!fxType || fxType === 'none') return;
+
+            const c = document.getElementById('overlay-container');
+            clearOverlayFX();
+            logDebug("FX: " + fxType);
+
+            switch (fxType) {
+                case 'shake':
+                    c.classList.add('fx-shake');
+                    setTimeout(clearOverlayFX, 1500); // 0.5s * 3 iterations
+                    break;
+
+                case 'glitch':
+                    c.classList.add('fx-glitch');
+                    setTimeout(clearOverlayFX, 1500); // 0.3s * 5 iterations
+                    break;
+
+                case 'rain':
+                    // Rain uses existing particle system - create rain drops
+                    createRainFX();
+                    break;
+
+                case 'confetti':
+                    // Extra confetti burst
+                    triggerConfetti(persona);
+                    setTimeout(() => triggerConfetti(persona), 300);
+                    break;
+            }
+        }
+
+        function createRainFX() {
+            const c = document.getElementById('overlay-container');
+            const layer = document.createElement('div');
+            layer.className = 'particles-layer';
+            for (let i = 0; i < 50; i++) {
+                const drop = document.createElement('div');
+                drop.style.cssText = `position:absolute;top:-10px;left:${Math.random() * 100}%;width:2px;height:${15 + Math.random() * 20}px;background:linear-gradient(to bottom,transparent,rgba(100,200,255,0.6));animation:matrixFall ${0.5 + Math.random() * 0.5}s linear ${Math.random() * 0.5}s infinite;`;
+                layer.appendChild(drop);
+            }
+            c.insertBefore(layer, c.firstChild);
+        }
+        // ═══════════════════════════════════════════════════════════════════
+        // PARTICLES
+        // ═══════════════════════════════════════════════════════════════════
+        function clearParticles() { document.querySelectorAll('.particles-layer').forEach(e => e.remove()); }
+
+        function createSkufFX() {
+            const c = document.getElementById('overlay-container');
+            const layer = document.createElement('div');
+            layer.className = 'particles-layer';
+            for (let i = 0; i < 25; i++) {
+                const b = document.createElement('div');
+                const size = 6 + Math.random() * 12;
+                b.style.cssText = `position:absolute;bottom:0;left:${5 + Math.random() * 90}%;width:${size}px;height:${size}px;background:radial-gradient(circle,rgba(255,200,80,0.9),rgba(255,150,30,0.3));border-radius:50%;animation:rise ${4 + Math.random() * 3}s ease-in-out ${Math.random() * 3}s infinite;`;
+                layer.appendChild(b);
+            }
+            c.insertBefore(layer, c.firstChild);
+        }
+
+        function createUwUFX() {
+            const c = document.getElementById('overlay-container');
+            const layer = document.createElement('div');
+            layer.className = 'particles-layer';
+            const hearts = ['💖', '💕', '💗', '💝', '✨', '⭐', '🌟', '🦋', '🌸'];
+            for (let i = 0; i < 30; i++) {
+                const h = document.createElement('div');
+                h.innerText = hearts[Math.floor(Math.random() * hearts.length)];
+                h.style.cssText = `position:absolute;bottom:20px;left:${5 + Math.random() * 90}%;font-size:${16 + Math.random() * 24}px;animation:heartFloat ${5 + Math.random() * 3}s ease-in-out ${Math.random() * 4}s infinite;filter:drop-shadow(0 0 8px rgba(255,119,255,0.8));`;
+                layer.appendChild(h);
+            }
+            for (let i = 0; i < 40; i++) {
+                const sp = document.createElement('div');
+                sp.style.cssText = `position:absolute;left:${Math.random() * 100}%;top:${Math.random() * 100}%;width:${4 + Math.random() * 8}px;height:${4 + Math.random() * 8}px;background:#fff;clip-path:polygon(50% 0%,61% 35%,98% 35%,68% 57%,79% 91%,50% 70%,21% 91%,32% 57%,2% 35%,39% 35%);animation:sparkle ${1 + Math.random()}s ease-in-out ${Math.random() * 2}s infinite;`;
+                layer.appendChild(sp);
+            }
+            c.insertBefore(layer, c.firstChild);
+        }
+
+        function createToxicFX() {
+            const c = document.getElementById('overlay-container');
+            const layer = document.createElement('div');
+            layer.className = 'particles-layer';
+            layer.style.opacity = '0.4';
+            const chars = '01アイウエオカキクケコ';
+            for (let i = 0; i < 20; i++) {
+                const col = document.createElement('div');
+                let txt = '';
+                for (let j = 0; j < 25; j++) txt += chars[Math.floor(Math.random() * chars.length)] + '\n';
+                col.innerText = txt;
+                col.style.cssText = `position:absolute;top:0;left:${i * 5}%;height:100%;font-family:Orbitron,monospace;font-size:11px;color:#39ff14;text-shadow:0 0 6px #39ff14;writing-mode:vertical-rl;animation:matrixFall ${3 + Math.random() * 2}s linear ${Math.random() * 2}s infinite;`;
+                layer.appendChild(col);
+            }
+            c.insertBefore(layer, c.firstChild);
+            const scan = document.createElement('div');
+            scan.className = 'particles-layer';
+            scan.innerHTML = '<div style="position:absolute;left:0;right:0;height:6px;background:linear-gradient(to bottom,transparent,rgba(57,255,20,0.4),transparent);animation:scan 2.5s linear infinite;"></div>';
+            c.insertBefore(scan, c.firstChild);
+        }
+
+        function createMistressFX() {
+            const c = document.getElementById('overlay-container');
+            const layer = document.createElement('div');
+            layer.className = 'particles-layer';
+            for (let i = 0; i < 40; i++) {
+                const e = document.createElement('div');
+                const size = 3 + Math.random() * 5;
+                e.style.cssText = `position:absolute;bottom:20px;left:${5 + Math.random() * 90}%;width:${size}px;height:${size}px;background:radial-gradient(circle,#ffaa00,#ff3300);border-radius:50%;animation:ember ${3 + Math.random() * 2}s ease-out ${Math.random() * 2}s infinite;box-shadow:0 0 8px #ff6600;`;
+                layer.appendChild(e);
+            }
+            for (let i = 0; i < 6; i++) {
+                const d = document.createElement('div');
+                d.style.cssText = `position:absolute;top:0;left:${10 + i * 15}%;width:4px;height:0;background:linear-gradient(to bottom,#ff0000,#880000);border-radius:0 0 3px 3px;animation:bloodDrip 5s ease-in-out ${i * 0.6}s infinite;`;
+                layer.appendChild(d);
+            }
+            const chainPos = [{ top: '15%', left: '8px' }, { top: '50%', right: '8px' }, { bottom: '15%', left: '8px' }];
+            chainPos.forEach((p, i) => {
+                const ch = document.createElement('div');
+                ch.innerText = '⛓️⛓️⛓️';
+                ch.style.cssText = `position:absolute;font-size:18px;color:#888;text-shadow:0 2px 6px rgba(0,0,0,0.9);animation:chainSwing 3s ease-in-out ${i * 0.5}s infinite;`;
+                Object.entries(p).forEach(([k, v]) => ch.style[k] = v);
+                layer.appendChild(ch);
+            });
+            c.insertBefore(layer, c.firstChild);
+        }
+
+        // Fix for "createParticles is not defined" error
+        function createParticles(targetPersona) {
+            applyFX(targetPersona);
+        }
+
+        function applyFX(p) {
+            clearParticles();
+            switch (p) {
+                case 'Skuf': createSkufFX(); break;
+                case 'UwU': createUwUFX(); break;
+                case 'Toxic': createToxicFX(); break;
+                case 'Mistress': createMistressFX(); break;
+            }
+        }
+
+        // ═══════════════════════════════════════════════════════════════════
+        // WEBSOCKET & OVERLAY
+        // ═══════════════════════════════════════════════════════════════════
+        function connect() {
+            logDebug("Connecting...");
+            socket = new WebSocket(WS_URL);
+            socket.onopen = () => {
+                logDebug("Connected!");
+                document.getElementById('status-dot').style.background = '#00ff00';
+                socket.send(JSON.stringify({ request: "Subscribe", id: "SUB_GEN", events: { General: ["GlobalVariableUpdated", "Custom"] } }));
+                socket.send(JSON.stringify({ request: "Subscribe", id: "SUB_RAW", events: { Raw: ["Action", "SubAction"] } }));
+            };
+            socket.onmessage = (e) => {
+                try {
+                    const d = JSON.parse(e.data);
+                    if (d.action === "close") { hideOverlay(); return; }
+                    if (d.action === "loading") { showLoading(); return; }
+                    if (d.action === "loading_off") { hideLoading(); return; }
+                    if (d.action === "moderator_alert") { showModerator(d); return; }
+
+                    // Unified check for image_reward to ignore it in this overlay
+                    const action = d.action || d.data?.action;
+                    const eventType = d.event_type || d.data?.event_type;
+                    if (action === "image_reward" || eventType === "image_reward") {
+                        logDebug("Ignoring image_reward in main overlay");
+                        return;
+                    }
+
+                    if (d.persona && d.message) { showOverlay(d); return; }
+                    if (d.event?.type === "GlobalVariableUpdated" && d.data?.name === "AiLatestOverlay") { showOverlay(JSON.parse(d.data.value)); return; }
+                    if (d.data?.persona && d.data?.message) { showOverlay(d.data); return; }
+                } catch (err) { logDebug("Err: " + err.message); }
+            };
+            socket.onclose = () => { document.getElementById('status-dot').style.background = 'red'; setTimeout(connect, 5000); };
+            socket.onerror = () => { document.getElementById('status-dot').style.background = 'orange'; };
+        }
+
+        function showLoading() { document.getElementById('loading-state')?.classList.add('active'); }
+        function hideLoading() { document.getElementById('loading-state')?.classList.remove('active'); }
+
+        function showModerator(d) {
+            const m = document.getElementById('mod-alert');
+            const img = document.getElementById('mod-image');
+            const txt = document.getElementById('mod-text');
+
+            img.src = d.image || '';
+            txt.innerText = d.message || d.reason || '';
+
+            m.style.display = 'flex';
+            // Force reflow
+            void m.offsetWidth;
+            m.classList.add('active');
+
+            setTimeout(() => {
+                m.classList.remove('active');
+                setTimeout(() => m.style.display = 'none', 500);
+            }, d.duration || 5000);
+        }
+
+
+
+        function updateHistory(list) {
+            if (!list) return;
+            const c = document.getElementById('history-list');
+            c.innerHTML = '';
+            list.forEach(i => { const div = document.createElement('div'); div.className = 'history-item'; div.innerText = i; c.appendChild(div); });
+        }
+
+        const switchMsg = {
+            'Skuf': '🍺 РЕЖИМ "ПИВНОЙ БРО" АКТИВИРОВАН\n«Эхх, давай по пивасику!»',
+            'UwU': '💖 KAWAII MODE ACTIVATED! ✨\n«Ня~ Привет-привет, сенпай!»',
+            'Toxic': '☣️ >>> SYSTEM OVERRIDE <<<\n[ROOT ACCESS GRANTED]\n> INITIATING TOXIC.EXE...',
+            'Mistress': '🔴 РЕЖИМ ГОСПОЖИ АКТИВЕН\n«На колени, раб. Немедленно.»'
+        };
+
+
+
+        function cleanupAudio() {
+            const audio = document.getElementById('ai-audio');
+            audio.pause();
+            audio.currentTime = 0;
+            audio.oncanplaythrough = null;
+            audio.onended = null;
+            audio.onerror = null;
+            stopTalking();
+        }
+
+        function showOverlay(data) {
+            hideLoading();
+            clearTimeout(hideTimeout);
+            clearTimeout(audioLoadTimeout);
+            cleanupAudio();
+
+            if (data.id && data.id !== currentRequestId) {
+                logDebug("NEW ID: " + data.id);
+                currentRequestId = data.id;
+            }
+
+            currentPersona = data.persona || 'Skuf';
+            const c = document.getElementById('overlay-container');
+            const av = document.getElementById('avatar-container');
+            const nm = document.getElementById('user-name');
+            const tx = document.getElementById('message-text');
+
+            // 1. Setup Theme & Particles
+            document.body.className = "theme-" + currentPersona;
+            clearParticles();
+            createParticles(currentPersona);
+
+            // 2. Avatar (Base64 or File)
+            av.style.backgroundImage = 'none';
+            // Prefer base64 image (data.image) over file path (data.image_file)
+            const imgUrl = data.image || data.image_file;
+            if (imgUrl) {
+                av.style.backgroundImage = `url("${imgUrl}")`;
+                av.style.display = 'block';
+            } else {
+                av.style.display = 'none';
+            }
+
+            // 3. Text (Intro vs Normal)
+            const isIntro = data.event_type === "intro_switch";
+            if (isIntro) {
+                nm.innerText = "SYSTEM";
+                tx.innerText = switchMsg[currentPersona] || "LOADING PERSONA...";
+                c.className = `active theme-${currentPersona} intro-mode`;
+                // Add FX logic if needed for intro
+            } else {
+                nm.innerText = data.persona;
+                tx.innerText = data.message;
+                c.className = `active theme-${currentPersona}`;
+                // Apply specific FX
+                if (data.fx) applyOverlayFX(data.fx, currentPersona);
+                if (data.history) updateHistory(data.history);
+            }
+
+            c.style.display = 'flex';
+            clearOverlayFX();
+
+            // 4. AUDIO LOGIC (Robust V2)
+            const audioPlayer = document.getElementById('ai-audio');
+
+            // Prefer base64 'audio' -> then file path 'audio_file'
+            // NOTE: AiDonationHandler sends 'audio' (base64). AiPersonaSwitcher should send 'audio_file'.
+            let audioSrc = data.audio || data.audio_file;
+
+            if (audioSrc) {
+                logDebug("Audio detected (" + (audioSrc.startsWith('data:') ? 'Base64' : 'File') + ")");
+                audioPlayer.src = audioSrc;
+                audioPlayer.volume = 1.0;
+
+                // Watchdog: If audio fails to load in 3.5s, force show overlay without audio wait
+                audioLoadTimeout = setTimeout(() => {
+                    logDebug("Audio timeout (3.5s) -> Force Show");
+                    cinematicEntrance(currentPersona);
+                    hideTimeout = setTimeout(hideOverlay, data.duration || 6000);
+                }, 3500);
+
+                audioPlayer.oncanplaythrough = () => {
+                    clearTimeout(audioLoadTimeout);
+                    logDebug("Audio ready. Playing...");
+
+                    audioPlayer.play().then(() => {
+                        startTalking();
+                        cinematicEntrance(currentPersona);
+
+                        let dur = (audioPlayer.duration * 1000) + 1200; // + buffer
+                        if (!isFinite(dur)) dur = data.duration || 6000;
+
+                        logDebug("Duration: " + (dur / 1000).toFixed(1) + "s");
+                        hideTimeout = setTimeout(hideOverlay, dur);
+                    }).catch(e => {
+                        logDebug("Play Err: " + e.message);
+                        // Ensure overlay shows even if autoplay fails
+                        cinematicEntrance(currentPersona);
+                        hideTimeout = setTimeout(hideOverlay, data.duration || 6000);
+                    });
+                };
+
+                audioPlayer.onerror = (e) => {
+                    clearTimeout(audioLoadTimeout);
+                    logDebug("Audio Error: " + (e.target.error ? e.target.error.code : 'unknown'));
+                    cinematicEntrance(currentPersona);
+                    hideTimeout = setTimeout(hideOverlay, data.duration || 6000);
+                };
+
+            } else {
+                logDebug("No audio source. Silent mode.");
+                cinematicEntrance(currentPersona);
+                hideTimeout = setTimeout(hideOverlay, data.duration || 6000);
+            }
+        }
+
+        function hideOverlay() {
+            clearTimeout(hideTimeout);
+            cleanupAudio();
+            stopTalking();
+            clearParticles();  // Clear immediately before animation
+            cinematicExit();
+            logDebug("Closed.");
+        }
+
+        function testRotation(p) {
+            showOverlay({ id: "ROT-" + Date.now(), event_type: "intro_switch", persona: p, image_file: "../Assets/intro_" + p + ".png", audio_file: "../Assets/intro_" + p + ".mp3" });
+        }
+
+        function testModerator() {
+            showModerator({
+                image: 'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" width="600" height="200"><rect fill="%23ff0000" width="600" height="200"/><text x="300" y="110" font-size="40" fill="white" text-anchor="middle" font-family="Arial">⚠️ MODERATOR ALERT ⚠️</text></svg>',
+                duration: 3000
+            });
+        }
+
+        // INIT
+        connect();
+    </script>
+</body>
+
+</html>

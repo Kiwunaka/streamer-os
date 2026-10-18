@@ -1,0 +1,14 @@
+if(NOT DEFINED SIMDE_INCLUDE_DIR)
+  set(SIMDE_INCLUDE_DIR "" CACHE PATH "SIMDe include directory")
+endif()
+
+if(NOT TARGET SIMDe::SIMDe)
+  add_library(SIMDe::SIMDe INTERFACE IMPORTED)
+  if(SIMDE_INCLUDE_DIR AND EXISTS "${SIMDE_INCLUDE_DIR}")
+    set_target_properties(SIMDe::SIMDe PROPERTIES
+      INTERFACE_INCLUDE_DIRECTORIES "${SIMDE_INCLUDE_DIR}"
+    )
+  endif()
+endif()
+
+set(SIMDe_FOUND TRUE)

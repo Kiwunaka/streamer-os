@@ -1,0 +1,152 @@
+﻿<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Stream Recap Crawl</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=News+Cycle:wght@400;700&family=Orbitron:wght@500;700&display=swap');
+
+    :root {
+      --crawl-duration: 45000ms;
+      --text-color: #ffd54a;
+      --glow: 0 0 22px rgba(255, 213, 74, 0.35);
+    }
+
+    html, body {
+      margin: 0;
+      padding: 0;
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+      background: #000;
+      color: var(--text-color);
+      font-family: "News Cycle", sans-serif;
+    }
+
+    .stage {
+      position: absolute;
+      inset: 0;
+      perspective: 380px;
+      background: radial-gradient(circle at 20% 20%, rgba(255,255,255,0.06) 0 1px, transparent 2px),
+                  radial-gradient(circle at 80% 40%, rgba(255,255,255,0.05) 0 1px, transparent 2px),
+                  radial-gradient(circle at 40% 80%, rgba(255,255,255,0.05) 0 1px, transparent 2px),
+                  #000;
+    }
+
+    .fade {
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      background: linear-gradient(180deg, rgba(0,0,0,0.95) 0%, rgba(0,0,0,0.05) 30%, rgba(0,0,0,0) 100%);
+      z-index: 2;
+    }
+
+    .crawl {
+      position: absolute;
+      width: 70vw;
+      max-width: 900px;
+      left: 50%;
+      bottom: -80vh;
+      transform: translateX(-50%) rotateX(18deg);
+      transform-origin: 50% 100%;
+      text-align: center;
+      font-size: 28px;
+      line-height: 1.35;
+      letter-spacing: 1px;
+      text-shadow: var(--glow);
+      animation: crawl var(--crawl-duration) linear forwards;
+    }
+
+    .title {
+      font-family: "Orbitron", sans-serif;
+      font-size: 44px;
+      letter-spacing: 6px;
+      margin-bottom: 18px;
+      text-transform: uppercase;
+    }
+
+    .subtitle {
+      font-size: 22px;
+      opacity: 0.85;
+      margin-bottom: 26px;
+    }
+
+    .body {
+      white-space: pre-wrap;
+      margin: 0 auto 24px auto;
+    }
+
+    .stats {
+      font-size: 24px;
+      line-height: 1.6;
+    }
+
+    @keyframes crawl {
+      0% { bottom: -80vh; opacity: 1; }
+      100% { bottom: 140vh; opacity: 0; }
+    }
+
+    .hidden {
+      display: none;
+    }
+  </style>
+</head>
+<body>
+  <div class="stage">
+    <div class="fade"></div>
+    <div id="crawl" class="crawl hidden">
+      <div id="title" class="title">STREAM RECAP</div>
+      <div id="subtitle" class="subtitle"></div>
+      <div id="body" class="body"></div>
+      <div id="stats" class="stats"></div>
+    </div>
+  </div>
+
+  <script>
+    const WS_URL = "ws://localhost:7474/";
+    const ACTION = "stream_recap_crawl";
+
+    const crawl = document.getElementById("crawl");
+    const title = document.getElementById("title");
+    const subtitle = document.getElementById("subtitle");
+    const body = document.getElementById("body");
+    const stats = document.getElementById("stats");
+
+    let ws;
+
+    function showCrawl(payload) {
+      title.textContent = payload.title || "STREAM RECAP";
+      subtitle.textContent = payload.subtitle || "";
+      body.textContent = payload.body || "";
+
+      const list = Array.isArray(payload.stats) ? payload.stats : [];
+      stats.textContent = list.join("\n");
+
+      const duration = Number(payload.duration || 45000);
+      crawl.style.setProperty("--crawl-duration", `${duration}ms`);
+
+      crawl.classList.remove("hidden");
+      crawl.style.animation = "none";
+      // Force reflow to restart animation
+      void crawl.offsetWidth;
+      crawl.style.animation = "crawl var(--crawl-duration) linear forwards";
+    }
+
+    function connect() {
+      ws = new WebSocket(WS_URL);
+      ws.onmessage = (ev) => {
+        let data;
+        try { data = JSON.parse(ev.data); } catch { return; }
+        if (!data) return;
+        if (data.action !== ACTION) return;
+        showCrawl(data);
+      };
+      ws.onclose = () => setTimeout(connect, 1200);
+      ws.onerror = () => ws.close();
+    }
+
+    connect();
+  </script>
+</body>
+</html>

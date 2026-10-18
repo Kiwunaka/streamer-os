@@ -1,0 +1,2127 @@
+<!DOCTYPE html>
+<html lang="ru">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Stream Overlay Premium 2026</title>
+    <link href="https://fonts.googleapis.com/css2?family=Unbounded:wght@400;500;700&family=Bricolage+Grotesque:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --font-display: 'Unbounded', 'Segoe UI', sans-serif;
+            --font-body: 'Bricolage Grotesque', 'Segoe UI', sans-serif;
+            --bg-0: #0a0c12;
+            --bg-1: #0f1624;
+            --bg-2: #121926;
+            --accent-1: #f8b84e;
+            --accent-2: #6ef2e3;
+            --accent-3: #ff6a3d;
+            --panel-bg: rgba(12, 14, 18, 0.74);
+            --panel-border: rgba(255, 255, 255, 0.08);
+            --panel-glow: rgba(248, 184, 78, 0.2);
+            --text-primary: #f5f7fb;
+            --text-muted: rgba(245, 247, 251, 0.6);
+        }
+
+        :root[data-theme="ice"] {
+            --accent-1: #7bd7ff;
+            --accent-2: #b1f6e3;
+            --accent-3: #9aa6ff;
+            --panel-bg: rgba(8, 14, 24, 0.78);
+        }
+
+        :root[data-theme="mono"] {
+            --accent-1: #f5f7fb;
+            --accent-2: #b3bcc9;
+            --accent-3: #707987;
+            --panel-bg: rgba(14, 15, 18, 0.82);
+            --text-muted: rgba(226, 231, 240, 0.55);
+        }
+
+        :root[data-theme="signal"] {
+            --accent-1: #ffb347;
+            --accent-2: #7cffd8;
+            --accent-3: #ff6bd6;
+            --panel-bg: rgba(10, 10, 16, 0.78);
+        }
+        /* ===========================================
+           🔥 STREAM OVERLAY PREMIUM 2026 V3
+           Dynamic Cover Background + Circular Timer
+           =========================================== */
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: var(--font-body);
+            min-height: 100vh;
+            overflow: hidden;
+            color: var(--text-primary);
+        }
+
+        /* === DYNAMIC ALBUM BACKGROUND === */
+        .bg-cover {
+            position: fixed;
+            top: -30%;
+            left: -30%;
+            width: 160%;
+            height: 160%;
+            background-size: cover;
+            background-position: center;
+            filter: blur(120px) saturate(1.4) brightness(0.4);
+            opacity: 0;
+            z-index: -3;
+            transition: opacity 2s ease, background-image 1.5s ease;
+            will-change: transform, opacity;
+            transform: translateZ(0);
+            animation: bgBreath 12s linear infinite;
+        }
+
+        .bg-cover.visible {
+            opacity: 1;
+        }
+
+        /* YouTube Video Background */
+        .bg-video {
+            position: fixed;
+            top: -20%;
+            left: -20%;
+            width: 140%;
+            height: 140%;
+            z-index: -4;
+            opacity: 0;
+            transition: opacity 1s ease;
+            pointer-events: none;
+        }
+
+        .bg-video.visible {
+            opacity: 0.4;
+        }
+
+        .bg-video iframe {
+            width: 100%;
+            height: 100%;
+            filter: blur(20px) saturate(1.2);
+        }
+
+        @keyframes bgBreath {
+            0% {
+                transform: translateZ(0) scale(1) translate(0%, 0%) rotate(0deg);
+            }
+
+            25% {
+                transform: translateZ(0) scale(1.15) translate(5%, -3%) rotate(90deg);
+            }
+
+            50% {
+                transform: translateZ(0) scale(1.1) translate(-4%, 5%) rotate(180deg);
+            }
+
+            75% {
+                transform: translateZ(0) scale(1.18) translate(-5%, -3%) rotate(270deg);
+            }
+
+            100% {
+                transform: translateZ(0) scale(1) translate(0%, 0%) rotate(360deg);
+            }
+        }
+
+        /* === BASE GRADIENT (fallback) === */
+        .bg-gradient {
+            position: fixed;
+            inset: 0;
+            background:
+                radial-gradient(80% 120% at 15% 20%, rgba(248, 184, 78, 0.14) 0%, rgba(0, 0, 0, 0) 60%),
+                radial-gradient(90% 130% at 90% 80%, rgba(110, 242, 227, 0.16) 0%, rgba(0, 0, 0, 0) 60%),
+                linear-gradient(135deg, var(--bg-0) 0%, var(--bg-1) 50%, var(--bg-2) 100%);
+            z-index: -4;
+        }
+
+        /* === SOFT VIGNETTE === */
+        .bg-vignette {
+            position: fixed;
+            inset: 0;
+            background: radial-gradient(ellipse at center, transparent 0%, rgba(0, 0, 0, 0.4) 100%);
+            z-index: -1;
+            pointer-events: none;
+        }
+
+        /* === AMBIENT LIGHT RAYS === */
+        .light-rays {
+            position: fixed;
+            inset: 0;
+            z-index: -2;
+            pointer-events: none;
+            background:
+                radial-gradient(ellipse at 20% 0%, rgba(248, 184, 78, 0.12) 0%, transparent 50%),
+                radial-gradient(ellipse at 80% 0%, rgba(110, 242, 227, 0.12) 0%, transparent 50%),
+                radial-gradient(ellipse at 50% 100%, rgba(255, 106, 61, 0.1) 0%, transparent 40%);
+            animation: raysPulse 8s ease-in-out infinite;
+        }
+
+        @keyframes raysPulse {
+
+            0%,
+            100% {
+                opacity: 0.6;
+            }
+
+            50% {
+                opacity: 1;
+            }
+        }
+
+        /* === FLOATING PARTICLES (Stars) === */
+        .particles {
+            position: fixed;
+            inset: 0;
+            z-index: -1;
+            pointer-events: none;
+            overflow: hidden;
+        }
+
+        .particle {
+            position: absolute;
+            width: 3px;
+            height: 3px;
+            background: rgba(255, 255, 255, 0.8);
+            border-radius: 50%;
+            animation: float 15s infinite ease-in-out;
+            box-shadow: 0 0 6px rgba(255, 255, 255, 0.4);
+        }
+
+        @keyframes float {
+
+            0%,
+            100% {
+                transform: translateY(0) translateX(0) scale(1);
+                opacity: 0.3;
+            }
+
+            25% {
+                transform: translateY(-30px) translateX(15px) scale(1.2);
+                opacity: 0.8;
+            }
+
+            50% {
+                transform: translateY(-50px) translateX(-10px) scale(0.8);
+                opacity: 0.5;
+            }
+
+            75% {
+                transform: translateY(-20px) translateX(20px) scale(1.1);
+                opacity: 0.9;
+            }
+        }
+
+        /* === MAIN CONTAINER === */
+        .container {
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            gap: 50px;
+            padding: 60px;
+            overflow: visible;
+        }
+
+        /* ===========================================
+           TIMER SECTION - CIRCULAR DESIGN
+           =========================================== */
+        .timer-section {
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            opacity: 1;
+            transform: scale(1);
+            transition: all 1s cubic-bezier(0.16, 1, 0.3, 1);
+            overflow: visible;
+        }
+
+        .timer-section.hidden {
+            opacity: 0;
+            transform: scale(0.9);
+            pointer-events: none;
+        }
+
+        /* Circular Progress Ring */
+        .timer-ring-container {
+            position: relative;
+            width: 380px;
+            height: 380px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            overflow: visible;
+        }
+
+        .timer-ring-svg {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            transform: rotate(-90deg);
+        }
+
+        .timer-ring-bg {
+            fill: none;
+            stroke: rgba(255, 255, 255, 0.06);
+            stroke-width: 14;
+        }
+
+        .timer-ring-progress {
+            fill: none;
+            stroke: url(#timerGradient);
+            stroke-width: 14;
+            stroke-linecap: round;
+            stroke-dasharray: 1068;
+            stroke-dashoffset: 1068;
+            transition: stroke-dashoffset 0.3s ease, stroke 0.5s ease;
+            filter:
+                drop-shadow(0 0 10px var(--ring-glow-1, rgba(248, 184, 78, 0.8))) drop-shadow(0 0 25px var(--ring-glow-2, rgba(110, 242, 227, 0.6))) drop-shadow(0 0 50px var(--ring-glow-1, rgba(248, 184, 78, 0.4)));
+            animation: ringPulse 3s ease-in-out infinite;
+        }
+
+        @keyframes ringPulse {
+
+            0%,
+            100% {
+                filter:
+                    drop-shadow(0 0 10px var(--ring-glow-1, rgba(248, 184, 78, 0.8))) drop-shadow(0 0 25px var(--ring-glow-2, rgba(110, 242, 227, 0.6))) drop-shadow(0 0 50px var(--ring-glow-1, rgba(248, 184, 78, 0.4)));
+            }
+
+            50% {
+                filter:
+                    drop-shadow(0 0 15px var(--ring-glow-1, rgba(248, 184, 78, 1))) drop-shadow(0 0 40px var(--ring-glow-2, rgba(110, 242, 227, 0.8))) drop-shadow(0 0 80px var(--ring-glow-1, rgba(248, 184, 78, 0.6)));
+            }
+        }
+
+        /* Inner content */
+        .timer-inner {
+            position: relative;
+            z-index: 2;
+            text-align: center;
+        }
+
+        .timer-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            padding: 10px 20px;
+            background: var(--panel-bg);
+            backdrop-filter: blur(18px);
+            border: 1px solid var(--panel-border);
+            border-radius: 100px;
+            font-size: 12px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            color: var(--text-muted);
+            margin-bottom: 15px;
+        }
+
+        .timer-badge-dot {
+            width: 8px;
+            height: 8px;
+            background: var(--accent-2);
+            border-radius: 50%;
+            box-shadow: 0 0 15px rgba(110, 242, 227, 0.7);
+            animation: pulseDot 2s ease-in-out infinite;
+        }
+
+        @keyframes pulseDot {
+
+            0%,
+            100% {
+                transform: scale(1);
+                opacity: 1;
+            }
+
+            50% {
+                transform: scale(1.4);
+                opacity: 0.5;
+            }
+        }
+
+        .timer-display {
+            font-size: 72px;
+            font-weight: 800;
+            letter-spacing: 4px;
+            font-variant-numeric: tabular-nums;
+            background: linear-gradient(180deg, var(--text-primary) 0%, rgba(245, 247, 251, 0.7) 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            line-height: 1;
+            margin-bottom: 10px;
+        }
+
+        .timer-label {
+            font-size: 14px;
+            font-weight: 500;
+            color: rgba(255, 255, 255, 0.5);
+            text-transform: uppercase;
+            letter-spacing: 3px;
+        }
+
+        /* Urgency mode - last 60 seconds */
+        .timer-section.urgent .timer-display {
+            animation: urgentPulse 0.5s ease-in-out infinite;
+        }
+
+        .timer-section.urgent .timer-ring-progress {
+            stroke: url(#urgentGradient) !important;
+            filter: drop-shadow(0 0 20px rgba(239, 68, 68, 0.8)) !important;
+        }
+
+        .timer-section.urgent .timer-badge-dot {
+            background: #ef4444 !important;
+            box-shadow: 0 0 15px #ef4444 !important;
+        }
+
+        @keyframes urgentPulse {
+
+            0%,
+            100% {
+                opacity: 1;
+                transform: scale(1);
+            }
+
+            50% {
+                opacity: 0.8;
+                transform: scale(1.02);
+            }
+        }
+
+        /* Title below ring */
+        .timer-title {
+            margin-top: 30px;
+            font-size: 32px;
+            font-weight: 700;
+            letter-spacing: 3px;
+            text-transform: uppercase;
+            font-family: var(--font-display);
+            color: var(--text-primary);
+            text-shadow: 0 0 40px rgba(0, 0, 0, 0.35);
+        }
+
+        .timer-subtitle {
+            margin-top: 15px;
+            font-size: 16px;
+            font-weight: 400;
+            color: var(--text-muted);
+            max-width: 400px;
+        }
+
+        /* ===========================================
+           MUSIC PLAYER SECTION
+           =========================================== */
+        .player-section {
+            width: 100%;
+            max-width: 700px;
+            opacity: 0;
+            transform: translateY(30px);
+            transition: all 0.8s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        .player-section.visible {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        .player-card {
+            display: flex;
+            align-items: center;
+            gap: 25px;
+            padding: 25px;
+            background: var(--panel-bg);
+            backdrop-filter: blur(24px);
+            border: 1px solid var(--panel-border);
+            border-radius: 20px;
+            box-shadow: 0 18px 38px rgba(0, 0, 0, 0.35);
+        }
+
+        /* Cover */
+        .player-cover-wrap {
+            position: relative;
+            flex-shrink: 0;
+        }
+
+        .player-cover {
+            width: 100px;
+            height: 100px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #374151, #1f2937);
+            background-size: cover;
+            background-position: center;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+            transition: background-image 0.8s ease;
+        }
+
+        .player-section.playing .player-cover {
+            animation: spin 12s linear infinite;
+        }
+
+        @keyframes spin {
+            from {
+                transform: rotate(0deg);
+            }
+
+            to {
+                transform: rotate(360deg);
+            }
+        }
+
+        .player-cover-glow {
+            position: absolute;
+            inset: -25%;
+            background-size: cover;
+            background-position: center;
+            filter: blur(30px) brightness(0.5);
+            opacity: 0.6;
+            z-index: -1;
+            border-radius: 50%;
+            transition: background-image 0.8s ease, opacity 0.5s ease;
+        }
+
+        /* Info */
+        .player-info {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .player-now {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 11px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+            color: var(--text-muted);
+            margin-bottom: 8px;
+        }
+
+        .player-source-icon {
+            width: 16px;
+            height: 16px;
+            object-fit: contain;
+            opacity: 0.7;
+            filter: grayscale(0.3);
+        }
+
+        .player-now-dot {
+            width: 6px;
+            height: 6px;
+            background: var(--accent-2);
+            border-radius: 50%;
+            box-shadow: 0 0 10px rgba(110, 242, 227, 0.7);
+            animation: pulseDot 2s ease-in-out infinite;
+        }
+
+        .player-title {
+            font-size: 22px;
+            font-weight: 700;
+            font-family: var(--font-display);
+            color: var(--text-primary);
+            margin-bottom: 4px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            transition: opacity 0.4s ease;
+        }
+
+        .player-title.fading {
+            opacity: 0;
+        }
+
+        .player-artist {
+            font-size: 15px;
+            font-weight: 500;
+            color: var(--text-muted);
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            transition: opacity 0.4s ease;
+        }
+
+        .player-artist.fading {
+            opacity: 0;
+        }
+
+        /* Progress */
+        .player-progress {
+            height: 4px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+            margin-top: 15px;
+            overflow: hidden;
+        }
+
+        .player-progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, var(--accent-1), var(--accent-2));
+            border-radius: 10px;
+            transition: width 0.3s linear;
+        }
+
+        /* Next track */
+        .player-next {
+            display: none;
+            align-items: center;
+            gap: 8px;
+            margin-top: 12px;
+            padding: 8px 12px;
+            background: rgba(255, 255, 255, 0.06);
+            border-radius: 10px;
+        }
+
+        .player-next.visible {
+            display: flex;
+        }
+
+        .player-next-label {
+            font-size: 10px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: rgba(255, 255, 255, 0.4);
+        }
+
+        .player-next-cover {
+            width: 24px;
+            height: 24px;
+            border-radius: 5px;
+            object-fit: cover;
+        }
+
+        .player-next-info {
+            font-size: 12px;
+            font-weight: 500;
+            color: rgba(255, 255, 255, 0.6);
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .player-visualizer {
+            position: relative;
+            width: 160px;
+            height: 90px;
+            flex-shrink: 0;
+        }
+
+        #player-viz-canvas {
+            position: absolute;
+            inset: 0;
+            width: 100%;
+            height: 100%;
+        }
+
+        .player-bars {
+            position: absolute;
+            inset: 8px;
+            display: grid;
+            grid-template-columns: repeat(10, 1fr);
+            gap: 3px;
+            align-items: end;
+        }
+
+        .player-bars .player-bar {
+            height: 12%;
+            border-radius: 999px;
+            background: linear-gradient(180deg, var(--accent-2), var(--accent-1));
+            box-shadow: 0 0 12px rgba(110, 242, 227, 0.3);
+            transition: height 0.12s ease-out, opacity 0.12s ease-out;
+        }
+
+        :root[data-viz="bars"] .player-bars {
+            display: grid;
+        }
+
+        :root[data-viz="bars"] #player-viz-canvas {
+            display: none;
+        }
+
+        :root:not([data-viz="bars"]) .player-bars {
+            display: none;
+        }
+
+        /* Audio-reactive cover glow rings */
+        .player-cover-wrap {
+            position: relative;
+        }
+
+        .audio-ring {
+            position: absolute;
+            border-radius: 50%;
+            pointer-events: none;
+            opacity: 0;
+            transition: all 0.08s ease-out;
+        }
+
+        .audio-ring.bass {
+            inset: -8px;
+            border: 3px solid var(--accent-1);
+            box-shadow: 0 0 20px rgba(248, 184, 78, 0.6);
+        }
+
+        .audio-ring.mid {
+            inset: -16px;
+            border: 2px solid var(--accent-2);
+            box-shadow: 0 0 15px rgba(110, 242, 227, 0.5);
+        }
+
+        .audio-ring.high {
+            inset: -24px;
+            border: 1px solid var(--accent-3);
+            box-shadow: 0 0 10px rgba(255, 106, 61, 0.5);
+        }
+
+        /* Cover pulse effect */
+        .player-cover.audio-pulse {
+            transition: transform 0.08s ease-out, box-shadow 0.08s ease-out;
+        }
+
+        .player-section:not(.playing) .player-bar {
+            animation: none !important;
+            transform: scaleY(0.15);
+            opacity: 0.3;
+        }
+
+        /* =============================================
+           CINEMATIC FINALE - "МЫ В ЭФИРЕ"
+           ============================================= */
+
+        /* Live Overlay - APPLE 2050 STYLE */
+        .live-overlay {
+            position: fixed;
+            inset: 0;
+            z-index: 1000;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            opacity: 0;
+            visibility: hidden;
+            transition: opacity 1.2s cubic-bezier(0.4, 0, 0.2, 1), visibility 1.2s ease;
+            overflow: hidden;
+        }
+
+        /* Album background for live overlay */
+        .live-bg {
+            position: absolute;
+            inset: -50%;
+            width: 200%;
+            height: 200%;
+            background-size: cover;
+            background-position: center;
+            filter: blur(80px) saturate(1.5) brightness(0.5);
+            animation: liveBgBreath 8s ease-in-out infinite;
+            z-index: -2;
+        }
+
+        @keyframes liveBgBreath {
+
+            0%,
+            100% {
+                transform: scale(1) rotate(0deg);
+            }
+
+            50% {
+                transform: scale(1.1) rotate(3deg);
+            }
+        }
+
+        /* Dark gradient overlay */
+        .live-gradient {
+            position: absolute;
+            inset: 0;
+            background: radial-gradient(ellipse at center, rgba(0, 0, 0, 0.3) 0%, rgba(0, 0, 0, 0.7) 100%);
+            z-index: -1;
+        }
+
+        .live-overlay.active {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .live-badge {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 16px 32px;
+            background: linear-gradient(135deg, #dc2626 0%, #b91c1c 100%);
+            border-radius: 100px;
+            margin-bottom: 30px;
+            animation: liveZoomIn 0.6s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+            box-shadow: 0 0 40px rgba(220, 38, 38, 0.6);
+        }
+
+        @keyframes liveZoomIn {
+            0% {
+                transform: scale(0);
+                opacity: 0;
+            }
+
+            100% {
+                transform: scale(1);
+                opacity: 1;
+            }
+        }
+
+        .live-dot {
+            width: 14px;
+            height: 14px;
+            background: #fff;
+            border-radius: 50%;
+            animation: livePulse 1s ease-in-out infinite;
+        }
+
+        @keyframes livePulse {
+
+            0%,
+            100% {
+                transform: scale(1);
+                opacity: 1;
+            }
+
+            50% {
+                transform: scale(1.3);
+                opacity: 0.7;
+            }
+        }
+
+        .live-text {
+            font-size: 24px;
+            font-weight: 800;
+            letter-spacing: 6px;
+            text-transform: uppercase;
+            color: #fff;
+        }
+
+        .live-title {
+            font-size: 48px;
+            font-weight: 800;
+            letter-spacing: 4px;
+            text-transform: uppercase;
+            color: #fff;
+            opacity: 0;
+            animation: fadeSlideUp 0.8s ease 0.3s forwards;
+        }
+
+        @keyframes fadeSlideUp {
+            0% {
+                transform: translateY(30px);
+                opacity: 0;
+            }
+
+            100% {
+                transform: translateY(0);
+                opacity: 1;
+            }
+        }
+
+        /* Fullscreen Player with Reflection */
+        .live-player {
+            margin-top: 60px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            opacity: 0;
+            animation: fadeSlideUp 0.8s ease 0.6s forwards;
+        }
+
+        .live-cover-container {
+            position: relative;
+            perspective: 800px;
+        }
+
+        .live-cover-container {
+            position: relative;
+            animation: containerFloat 6s ease-in-out infinite;
+        }
+
+        .live-cover {
+            width: 320px;
+            height: 320px;
+            border-radius: 50%;
+            background-size: cover;
+            background-position: center;
+            box-shadow:
+                0 30px 80px rgba(0, 0, 0, 0.5),
+                0 0 0 4px rgba(255, 255, 255, 0.1),
+                0 0 60px var(--ring-glow-1, rgba(139, 92, 246, 0.4)),
+                0 0 120px var(--ring-glow-2, rgba(236, 72, 153, 0.3));
+            animation: coverGlow 6s ease-in-out infinite;
+            border: none;
+        }
+
+        @keyframes containerFloat {
+
+            0%,
+            100% {
+                transform: translateY(0) scale(1);
+            }
+
+            50% {
+                transform: translateY(-15px) scale(1.03);
+            }
+        }
+
+        @keyframes coverGlow {
+
+            0%,
+            100% {
+                box-shadow:
+                    0 30px 80px rgba(0, 0, 0, 0.5),
+                    0 0 0 4px rgba(255, 255, 255, 0.1),
+                    0 0 60px var(--ring-glow-1, rgba(139, 92, 246, 0.4)),
+                    0 0 120px var(--ring-glow-2, rgba(236, 72, 153, 0.3));
+            }
+
+            50% {
+                box-shadow:
+                    0 50px 100px rgba(0, 0, 0, 0.4),
+                    0 0 0 4px rgba(255, 255, 255, 0.15),
+                    0 0 100px var(--ring-glow-1, rgba(139, 92, 246, 0.7)),
+                    0 0 180px var(--ring-glow-2, rgba(236, 72, 153, 0.5));
+            }
+        }
+
+        /* Mirror Reflection - Full Circle */
+        .live-cover-reflection {
+            width: 320px;
+            height: 320px;
+            border-radius: 50%;
+            background-size: cover;
+            background-position: center;
+            transform: scaleY(-1) translateY(-10px);
+            mask-image: linear-gradient(to bottom, rgba(0, 0, 0, 0.6) 0%, rgba(0, 0, 0, 0.3) 30%, transparent 70%);
+            -webkit-mask-image: linear-gradient(to bottom, rgba(0, 0, 0, 0.6) 0%, rgba(0, 0, 0, 0.3) 30%, transparent 70%);
+            filter: blur(3px);
+            opacity: 0.5;
+            animation: reflectionGlow 6s ease-in-out infinite;
+        }
+
+        @keyframes reflectionGlow {
+
+            0%,
+            100% {
+                transform: scaleY(-1) translateY(-10px);
+                box-shadow:
+                    0 30px 80px rgba(0, 0, 0, 0.5),
+                    0 0 0 4px rgba(255, 255, 255, 0.1),
+                    0 0 60px var(--ring-glow-1, rgba(139, 92, 246, 0.4)),
+                    0 0 120px var(--ring-glow-2, rgba(236, 72, 153, 0.3));
+            }
+
+            50% {
+                transform: scaleY(-1) translateY(-10px);
+                box-shadow:
+                    0 50px 100px rgba(0, 0, 0, 0.4),
+                    0 0 0 4px rgba(255, 255, 255, 0.15),
+                    0 0 100px var(--ring-glow-1, rgba(139, 92, 246, 0.7)),
+                    0 0 180px var(--ring-glow-2, rgba(236, 72, 153, 0.5));
+            }
+        }
+
+        .live-track-info {
+            margin-top: 30px;
+            text-align: center;
+        }
+
+        .live-track-title {
+            font-size: 28px;
+            font-weight: 700;
+            color: #fff;
+            margin-bottom: 8px;
+        }
+
+        .live-track-artist {
+            font-size: 18px;
+            color: rgba(255, 255, 255, 0.6);
+        }
+
+        /* Visualizer bars in live mode */
+        .live-visualizer {
+            display: flex;
+            gap: 6px;
+            margin-top: 30px;
+            height: 50px;
+            align-items: flex-end;
+        }
+
+        .live-bar {
+            width: 6px;
+            background: linear-gradient(180deg, #8b5cf6 0%, #ec4899 100%);
+            border-radius: 3px;
+            animation: liveBar 0.6s ease-in-out infinite;
+        }
+
+        .live-bar:nth-child(1) {
+            height: 60%;
+            animation-delay: 0s;
+        }
+
+        .live-bar:nth-child(2) {
+            height: 80%;
+            animation-delay: 0.1s;
+        }
+
+        .live-bar:nth-child(3) {
+            height: 50%;
+            animation-delay: 0.2s;
+        }
+
+        .live-bar:nth-child(4) {
+            height: 90%;
+            animation-delay: 0.15s;
+        }
+
+        .live-bar:nth-child(5) {
+            height: 40%;
+            animation-delay: 0.25s;
+        }
+
+        .live-bar:nth-child(6) {
+            height: 70%;
+            animation-delay: 0.05s;
+        }
+
+        .live-bar:nth-child(7) {
+            height: 55%;
+            animation-delay: 0.3s;
+        }
+
+        @keyframes liveBar {
+
+            0%,
+            100% {
+                transform: scaleY(0.4);
+            }
+
+            50% {
+                transform: scaleY(1);
+            }
+        }
+        @media (prefers-reduced-motion: reduce) {
+            * {
+                animation-duration: 0.01ms !important;
+                animation-iteration-count: 1 !important;
+                transition-duration: 0.01ms !important;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <!-- CINEMATIC LIVE OVERLAY -->
+    <div class="live-overlay" id="live-overlay">
+        <div class="live-bg" id="live-bg"></div>
+        <div class="live-gradient"></div>
+        <div class="live-badge">
+            <div class="live-dot"></div>
+            <span class="live-text">В эфире</span>
+        </div>
+        <div class="live-title" id="live-title">СТРИМ НАЧАЛСЯ!</div>
+        <div class="live-player">
+            <div class="live-cover-container" style="position: relative;">
+                <canvas id="live-canvas" width="600" height="1200"
+                    style="position: absolute; top: 160px; left: 50%; transform: translate(-50%, -50%); pointer-events: none; z-index: -1;"></canvas>
+                <div class="live-cover" id="live-cover"></div>
+                <div class="live-cover-reflection" id="live-cover-reflection"></div>
+            </div>
+            <div class="live-track-info">
+                <div class="live-track-title" id="live-track-title">—</div>
+                <div class="live-track-artist" id="live-track-artist">—</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Dynamic Backgrounds -->
+    <div class="bg-cover" id="bg-cover"></div>
+    <div class="bg-gradient"></div>
+    <div class="light-rays"></div>
+    <div class="bg-vignette"></div>
+
+    <div class="container">
+        <!-- CIRCULAR TIMER -->
+        <div class="timer-section" id="timer-section">
+            <div class="timer-ring-container">
+                <canvas id="timer-canvas" width="600" height="600"
+                    style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); pointer-events: none; z-index: -1;"></canvas>
+                <svg class="timer-ring-svg" viewBox="-40 -40 440 440" style="overflow: visible;">
+                    <defs>
+                        <linearGradient id="timerGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                            <stop offset="0%" stop-color="#f8b84e" />
+                            <stop offset="50%" stop-color="#6ef2e3" />
+                            <stop offset="100%" stop-color="#ff6a3d" />
+                        </linearGradient>
+                        <linearGradient id="urgentGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                            <stop offset="0%" stop-color="#ef4444" />
+                            <stop offset="50%" stop-color="#dc2626" />
+                            <stop offset="100%" stop-color="#b91c1c" />
+                        </linearGradient>
+                    </defs>
+                    <circle class="timer-ring-bg" cx="180" cy="180" r="170" />
+                    <circle class="timer-ring-progress" id="timer-ring" cx="180" cy="180" r="170" />
+                </svg>
+                <div class="timer-inner">
+                    <div class="timer-badge">
+                        <div class="timer-badge-dot"></div>
+                        <span id="timer-status">Скоро в эфире</span>
+                    </div>
+                    <div class="timer-display" id="timer-display">00:00:00</div>
+                    <div class="timer-label">до начала</div>
+                </div>
+            </div>
+            <h1 class="timer-title" id="timer-title">СТАРТ СТРИМА</h1>
+            <p class="timer-subtitle" id="timer-subtitle">Готовим сцену. Врываемся красиво.</p>
+        </div>
+
+        <!-- MUSIC PLAYER -->
+        <div class="player-section" id="player-section">
+            <div class="player-card">
+                <div class="player-cover-wrap">
+                    <div class="player-cover-glow" id="player-cover-glow"></div>
+                    <div class="player-cover" id="player-cover"></div>
+                </div>
+                <div class="player-info">
+                    <div class="player-now">
+                        <div class="player-now-dot"></div>
+                        <img class="player-source-icon" id="player-source-icon" src="" style="display:none;">
+                        Now playing
+                    </div>
+                    <div class="player-title" id="player-title">Not Playing</div>
+                    <div class="player-artist" id="player-artist">Artist</div>
+                    <div class="player-progress">
+                        <div class="player-progress-fill" id="player-progress"></div>
+                    </div>
+                    <div class="player-next" id="player-next">
+                        <span class="player-next-label">Next:</span>
+                        <img class="player-next-cover" id="player-next-cover" src="">
+                        <span class="player-next-info" id="player-next-info"></span>
+                    </div>
+                </div>
+                <div class="player-visualizer" id="player-visualizer">
+                    <canvas id="player-viz-canvas" width="240" height="140"></canvas>
+                    <div class="player-bars">
+                        <div class="player-bar"></div>
+                        <div class="player-bar"></div>
+                        <div class="player-bar"></div>
+                        <div class="player-bar"></div>
+                        <div class="player-bar"></div>
+                        <div class="player-bar"></div>
+                        <div class="player-bar"></div>
+                        <div class="player-bar"></div>
+                        <div class="player-bar"></div>
+                        <div class="player-bar"></div>
+                        <div class="player-bar"></div>
+                        <div class="player-bar"></div>
+                        <div class="player-bar"></div>
+                        <div class="player-bar"></div>
+                        <div class="player-bar"></div>
+                        <div class="player-bar"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // =============================================
+        // URL PARAMETERS (Preset System)
+        // =============================================
+        const urlParams = new URLSearchParams(window.location.search);
+        const PRESET = urlParams.get('preset') || 'vinyl';
+        const THEME = urlParams.get('theme') || 'ember';
+        const VIZ = urlParams.get('viz') || 'radial';
+        const ACCENT = urlParams.get('accent') || '';
+        const OPACITY = parseFloat(urlParams.get('opacity')) || 80;
+        const SENSITIVITY = parseFloat(urlParams.get('sensitivity')) || 1.0;
+        const GLOW = parseFloat(urlParams.get('glow')) || 50;
+        const MOTION = parseFloat(urlParams.get('motion')) || 1.0;
+        const TIMER_MODE = urlParams.get('timer') || 'auto';
+
+        // =============================================
+        // CONFIGURATION
+        // =============================================
+        const TUNA_URL = 'http://localhost:1608/';
+        const RING_CIRCUMFERENCE = 2 * Math.PI * 170; // 1068
+        document.documentElement.dataset.theme = THEME;
+        document.documentElement.dataset.viz = VIZ;
+        if (ACCENT) {
+            document.documentElement.style.setProperty('--accent-1', ACCENT);
+            document.documentElement.style.setProperty('--accent-2', ACCENT);
+            document.documentElement.style.setProperty('--accent-3', ACCENT);
+        }
+        window.latestBands = [];
+
+        // =============================================
+        // DOM
+        // =============================================
+        const bgCover = document.getElementById('bg-cover');
+        const timerSection = document.getElementById('timer-section');
+        const timerDisplay = document.getElementById('timer-display');
+        const timerRing = document.getElementById('timer-ring');
+        const timerStatus = document.getElementById('timer-status');
+        const timerTitle = document.getElementById('timer-title');
+        const timerSubtitle = document.getElementById('timer-subtitle');
+
+        const playerSection = document.getElementById('player-section');
+        const playerCover = document.getElementById('player-cover');
+        const playerCoverGlow = document.getElementById('player-cover-glow');
+        const playerTitle = document.getElementById('player-title');
+        const playerArtist = document.getElementById('player-artist');
+        const playerProgressEl = document.getElementById('player-progress');
+        const playerNext = document.getElementById('player-next');
+        const playerNextCover = document.getElementById('player-next-cover');
+        const playerNextInfo = document.getElementById('player-next-info');
+        const playerSourceIcon = document.getElementById('player-source-icon');
+        const bgVideo = document.getElementById('bg-video');
+        const playerVizCanvas = document.getElementById('player-viz-canvas');
+        const playerVizCtx = playerVizCanvas ? playerVizCanvas.getContext('2d') : null;
+        const playerBars = document.querySelectorAll('.player-bars .player-bar');
+        const timerVizCanvas = document.getElementById('timer-canvas');
+        const timerVizCtx = timerVizCanvas ? timerVizCanvas.getContext('2d') : null;
+
+        // Source icons (local SVG files in icons/ subfolder)
+        // Only include icons that exist
+        const SOURCE_ICONS = {
+            yandex: 'icons/icons8-yandex-music-new.svg',
+            youtube: 'icons/icons8-youtube.svg',
+            youtube_music: 'icons/icons8-youtube-music.svg'
+        };
+
+        // =============================================
+        // STATE
+        // =============================================
+        let targetMs = null;
+        let initialDiff = null;
+        let lastCover = '';
+        let lastTitle = '';
+        let lastArtist = '';
+        let lastNext = '';
+        let lastVideoId = '';
+        let lastSource = '';
+
+        // =============================================
+        // TIMER
+        // =============================================
+        function pad(n) { return String(n).padStart(2, '0'); }
+
+        function setTimer(ms) {
+            if (!ms || ms <= Date.now()) {
+                targetMs = null;
+                initialDiff = null;
+                return;
+            }
+            targetMs = ms;
+            initialDiff = ms - Date.now();
+        }
+
+        function updateTimer() {
+            if (!targetMs) {
+                timerDisplay.textContent = '00:00';
+                timerRing.style.strokeDashoffset = RING_CIRCUMFERENCE;
+                return;
+            }
+
+            const diff = targetMs - Date.now();
+
+            if (diff <= 0) {
+                timerDisplay.textContent = '00:00';
+                timerStatus.textContent = 'Мы в эфире!';
+                timerRing.style.strokeDashoffset = 0;
+                timerSection.classList.remove('urgent');
+
+                // CINEMATIC FINALE
+                setTimeout(() => {
+                    timerSection.classList.add('hidden');
+                    showLiveOverlay();
+                }, 1500);
+
+                targetMs = null;
+                return;
+            }
+
+            const h = Math.floor(diff / 3600000);
+            const m = Math.floor((diff % 3600000) / 60000);
+            const s = Math.floor((diff % 60000) / 1000);
+
+            // Smart format: hide hours if 0
+            if (h > 0) {
+                timerDisplay.textContent = `${pad(h)}:${pad(m)}:${pad(s)}`;
+            } else {
+                timerDisplay.textContent = `${pad(m)}:${pad(s)}`;
+            }
+
+            // Urgency mode for last 60 seconds
+            if (diff <= 60000) {
+                timerSection.classList.add('urgent');
+            } else {
+                timerSection.classList.remove('urgent');
+            }
+
+            // Update circular progress
+            if (initialDiff) {
+                const progress = (initialDiff - diff) / initialDiff;
+                const offset = RING_CIRCUMFERENCE * (1 - progress);
+                timerRing.style.strokeDashoffset = offset;
+            }
+        }
+
+        // =============================================
+        // CINEMATIC LIVE OVERLAY
+        // =============================================
+        const liveOverlay = document.getElementById('live-overlay');
+        const liveBg = document.getElementById('live-bg');
+        const liveCover = document.getElementById('live-cover');
+        const liveCoverReflection = document.getElementById('live-cover-reflection');
+        const liveTrackTitle = document.getElementById('live-track-title');
+        const liveTrackArtist = document.getElementById('live-track-artist');
+        const liveTitle = document.getElementById('live-title');
+        let timerFinished = false; // Prevent auto-restart
+
+        function showLiveOverlay() {
+            timerFinished = true; // Mark timer as completed
+
+            // Update live overlay with current track
+            updateLiveOverlay();
+
+            liveTitle.textContent = timerTitle.textContent || 'СТРИМ НАЧАЛСЯ!';
+
+            // Hide regular player during finale
+            playerSection.classList.remove('visible');
+            playerSection.style.display = 'none';
+
+            // Show overlay - stays visible until page refresh
+            liveOverlay.classList.add('active');
+
+            // Финальная сцена остаётся навсегда
+            // Для сброса — обновить страницу или отправить WS команду
+        }
+
+        // Update track info on finale screen
+        function updateLiveOverlay() {
+            const currentCover = lastCover || '';
+            const currentTitle = lastTitle || 'Стрим начался!';
+            const currentArtist = lastArtist || '';
+
+            if (currentCover) {
+                liveCover.style.backgroundImage = `url('${currentCover}')`;
+                liveCoverReflection.style.backgroundImage = `url('${currentCover}')`;
+                liveBg.style.backgroundImage = `url('${currentCover}')`;
+            }
+            liveTrackTitle.textContent = currentTitle;
+            liveTrackArtist.textContent = currentArtist;
+        }
+
+
+        // URL Parameters
+        const params = new URLSearchParams(window.location.search);
+
+        if (TIMER_MODE == 'off') {
+            setTimer(null);
+            timerSection.classList.add('hidden');
+        } else if (TIMER_MODE == 'minutes' || params.has('minutes')) {
+            const mins = parseInt(params.get('minutes') || '10');
+            if (mins > 0) setTimer(Date.now() + mins * 60000);
+        } else if (TIMER_MODE == 'start' || params.has('start')) {
+            let ts = parseInt(params.get('start') || '0');
+            if (ts < 1e12) ts *= 1000;
+            if (ts > Date.now()) setTimer(ts);
+        } else if (TIMER_MODE == 'time' || params.has('time')) {
+            const [h, m] = (params.get('time') || '19:00').split(':').map(Number);
+            const target = new Date();
+            target.setHours(h, m || 0, 0, 0);
+            if (target.getTime() < Date.now()) target.setDate(target.getDate() + 1);
+            setTimer(target.getTime());
+        } else {
+            // DEFAULT: 10 minutes from now (just refresh source to start!)
+            setTimer(Date.now() + 10 * 60 * 1000);
+            timerTitle.textContent = "STREAM STARTS";
+            timerSubtitle.textContent = "Preparing the scene. Going live soon.";
+        }
+
+        if (params.has('title')) timerTitle.textContent = params.get('title');
+        if (params.has('subtitle')) timerSubtitle.textContent = params.get('subtitle');
+        if (params.has('label')) timerStatus.textContent = params.get('label');
+
+setInterval(updateTimer, 100); // 60fps-ish
+        updateTimer();
+
+        // =============================================
+        // MUSIC PLAYER
+        // =============================================
+        function optimizeCoverUrl(url) {
+            if (!url) return '';
+            // Reduce 1000x1000 to 400x400 for blur background (performance)
+            return url.replace('/1000x1000', '/400x400')
+                .replace('1000x1000', '400x400');
+        }
+
+        // Extract dominant colors from album cover
+        function extractColorsFromCover(coverUrl) {
+            const img = new Image();
+            img.crossOrigin = 'Anonymous';
+            img.onload = () => {
+                const canvas = document.createElement('canvas');
+                const ctx = canvas.getContext('2d');
+                canvas.width = 50;
+                canvas.height = 50;
+                ctx.drawImage(img, 0, 0, 50, 50);
+
+                try {
+                    const imageData = ctx.getImageData(0, 0, 50, 50).data;
+                    const colors = [];
+
+                    // Sample pixels from different regions
+                    const regions = [
+                        { x: 5, y: 5 },   // top-left
+                        { x: 25, y: 5 },  // top-center
+                        { x: 45, y: 25 }, // right
+                        { x: 25, y: 45 }, // bottom
+                        { x: 25, y: 25 }  // center
+                    ];
+
+                    regions.forEach(({ x, y }) => {
+                        const idx = (y * 50 + x) * 4;
+                        const r = imageData[idx];
+                        const g = imageData[idx + 1];
+                        const b = imageData[idx + 2];
+
+                        // Skip very dark or very light colors
+                        const brightness = (r + g + b) / 3;
+                        // Relaxed filters to catch white/black covers better
+                        if (brightness > 15 && brightness < 250) {
+                            colors.push({ r, g, b, brightness });
+                        }
+                    });
+
+                    if (colors.length >= 2) {
+                        // Sort by brightness and get 2 contrasting colors
+                        colors.sort((a, b) => b.brightness - a.brightness);
+                        const color1 = colors[0];
+                        const color2 = colors[Math.min(1, colors.length - 1)];
+
+                        // Update SVG gradient stops
+                        const gradient = document.getElementById('timerGradient');
+                        if (gradient) {
+                            const stops = gradient.querySelectorAll('stop');
+                            if (stops.length >= 3) {
+                                stops[0].setAttribute('stop-color', `rgb(${color1.r}, ${color1.g}, ${color1.b})`);
+                                stops[1].setAttribute('stop-color', `rgb(${Math.round((color1.r + color2.r) / 2)}, ${Math.round((color1.g + color2.g) / 2)}, ${Math.round((color1.b + color2.b) / 2)})`);
+                                stops[2].setAttribute('stop-color', `rgb(${color2.r}, ${color2.g}, ${color2.b})`);
+                            }
+                        }
+
+                        // Update CSS glow variables
+                        document.documentElement.style.setProperty('--ring-glow-1', `rgba(${color1.r}, ${color1.g}, ${color1.b}, 0.8)`);
+                        document.documentElement.style.setProperty('--ring-glow-2', `rgba(${color2.r}, ${color2.g}, ${color2.b}, 0.6)`);
+
+                        // Set global for visualizers
+                        window.coverColor = `rgb(${color1.r}, ${color1.g}, ${color1.b})`;
+                    }
+                } catch (e) {
+                    console.log('[Color] CORS blocked, using defaults');
+                }
+            };
+            img.src = coverUrl;
+        }
+
+        function updatePlayer() {
+            fetch(TUNA_URL)
+                .then(r => r.json())
+                .then(data => {
+                    // ALWAYS update cover and colors first, regardless of mode
+                    const cover = data.cover || data.cover_url || '';
+                    if (cover && cover !== lastCover) {
+                        lastCover = cover;
+
+                        // Extract colors enables dynamic glow
+                        extractColorsFromCover(cover);
+
+                        // If finale is showing, we just need to update the live overlay elements
+                        if (timerFinished) {
+                            updateLiveOverlay();
+                        } else {
+                            // Standard Player Update
+                            playerCover.style.backgroundImage = `url('${cover}')`;
+                            playerCoverGlow.style.backgroundImage = `url('${cover}')`;
+
+                            const bgUrl = optimizeCoverUrl(cover);
+                            bgCover.style.backgroundImage = `url('${bgUrl}')`;
+                            bgCover.classList.add('visible');
+                        }
+                    }
+
+                    // If finale is showing, update live overlay text and return
+                    if (timerFinished) {
+                        const title = data.title || '';
+                        const artist = Array.isArray(data.artists) ? data.artists.join(', ') : (data.artists || '');
+
+                        if (title !== lastTitle) lastTitle = title;
+                        if (artist !== lastArtist) lastArtist = artist;
+
+                        updateLiveOverlay();
+                        return;
+                    }
+
+                    // Restore visibility logic - CRITICAL FIX
+                    if (data.status === 'playing') {
+                        playerSection.classList.add('visible', 'playing');
+                    } else {
+                        playerSection.classList.remove('playing');
+                    }
+
+                    // Detect source from cover URL (Tuna doesn't pass custom fields)
+                    function detectSource(coverUrl) {
+                        if (!coverUrl) return '';
+                        if (coverUrl.includes('avatars.yandex.net') || coverUrl.includes('music.yandex')) return 'yandex';
+                        if (coverUrl.includes('i.ytimg.com')) return 'youtube';
+                        if (coverUrl.includes('lh3.googleusercontent.com') || coverUrl.includes('music.youtube')) return 'youtube_music';
+                        if (coverUrl.includes('i.scdn.co') || coverUrl.includes('spotify')) return 'spotify';
+                        if (coverUrl.includes('sndcdn.com')) return 'soundcloud';
+                        if (coverUrl.includes('dzcdn.net') || coverUrl.includes('deezer')) return 'deezer';
+                        return '';
+                    }
+
+                    // Source icon - detect from cover URL
+                    const source = data.source || detectSource(cover);
+                    if (source !== lastSource) {
+                        const iconUrl = SOURCE_ICONS[source];
+                        if (iconUrl) {
+                            playerSourceIcon.src = iconUrl;
+                            playerSourceIcon.style.display = '';
+                        } else {
+                            playerSourceIcon.style.display = 'none';
+                        }
+                        lastSource = source;
+                        console.log('[Overlay] Source changed to:', source);
+                    }
+
+                    // YouTube video background removed - using static cover only
+
+                    const title = data.title || 'Unknown';
+                    if (title !== lastTitle) {
+                        // Fade out, change, fade in
+                        playerTitle.classList.add('fading');
+                        setTimeout(() => {
+                            playerTitle.textContent = title;
+                            playerTitle.classList.remove('fading');
+                        }, 300);
+                        lastTitle = title;
+                    }
+
+                    let artist = data.artists?.join(', ') || data.artist || 'Unknown Artist';
+                    if (artist !== lastArtist) {
+                        playerArtist.classList.add('fading');
+                        setTimeout(() => {
+                            playerArtist.textContent = artist;
+                            playerArtist.classList.remove('fading');
+                        }, 300);
+                        lastArtist = artist;
+                    }
+
+                    const progress = data.progress || 0;
+                    const duration = data.duration || 1;
+                    playerProgressEl.style.width = `${Math.min((progress / duration) * 100, 100)}%`;
+
+                    // Update progress bar color
+                    if (window.coverColor) {
+                        playerProgressEl.style.background = window.coverColor;
+                        playerProgressEl.style.boxShadow = `0 0 10px ${window.coverColor}`;
+                    }
+
+                    if (data.next_track) {
+                        const key = `${data.next_track.artist}-${data.next_track.title}`;
+                        if (key !== lastNext) {
+                            playerNextInfo.textContent = `${data.next_track.artist} — ${data.next_track.title}`;
+                            if (data.next_track.cover) {
+                                playerNextCover.src = data.next_track.cover;
+                                playerNextCover.style.display = '';
+                            } else {
+                                playerNextCover.style.display = 'none';
+                            }
+                            playerNext.classList.add('visible');
+                            lastNext = key;
+                        }
+                    } else {
+                        playerNext.classList.remove('visible');
+                        lastNext = '';
+                    }
+                })
+                .catch(() => { });
+        }
+
+        setInterval(updatePlayer, 500);
+        updatePlayer();
+
+        // =============================================
+        // WEBSOCKET (Streamer.bot)
+        // =============================================
+        // =============================================
+        // WEBSOCKET (Streamer.bot) - ROBUST V2
+        // =============================================
+        function connectWebsocket() {
+            // Port 7474 (Default)
+            const ws = new WebSocket("ws://127.0.0.1:7474/");
+
+            // Variable names to sync
+            const VAR_START = "StreamStartAt";
+            const VAR_TITLE = "StreamStartTitle";
+            const VAR_SUBTITLE = "StreamStartSubtitle";
+            const VAR_LABEL = "StreamStartLabel";
+
+            ws.onopen = () => {
+                console.log("%c[Overlay] Connected to Streamer.bot (7474)", "color: lime; font-weight: bold;");
+
+                // 1. Subscribe to updates (TRY BOTH FORMATS to be safe)
+                // Modern Format (v0.2.0+)
+                ws.send(JSON.stringify({
+                    request: "Subscribe",
+                    id: "SUB_GLOBAL_VARS_V5",
+                    events: { General: ["GlobalVariableUpdated", "Custom"] }
+                }));
+
+                // Legacy Format (v0.1.X - used in old overlay)
+                ws.send(JSON.stringify({
+                    request: "Subscribe",
+                    id: "SUB_LEGACY",
+                    events: ["GlobalVariableUpdated", "Custom", "General"]
+                }));
+
+                console.log("[Overlay] Sent subscriptions (Modern + Legacy)");
+
+                // 2. Request current values immediately (with slight delay)
+                setTimeout(() => {
+                    [VAR_START, VAR_TITLE, VAR_SUBTITLE, VAR_LABEL].forEach(name => {
+                        ws.send(JSON.stringify({ request: "GetGlobalVar", id: `GET_${name}`, name: name }));
+                    });
+                }, 500);
+            };
+
+            function handleUpdate(name, value) {
+                console.log(`[Overlay] Update: ${name} = ${value}`);
+
+                // Don't process timer updates if finale is showing
+                if (timerFinished && name === VAR_START) {
+                    console.log('[Overlay] Ignoring timer update - finale is active');
+                    return;
+                }
+
+                if (name === VAR_START) {
+                    const startAt = parseInt(value);
+                    if (!isNaN(startAt)) {
+                        if (startAt === 0) {
+                            setTimer(null);
+                            timerSection.classList.add('hidden');
+                        } else {
+                            timerSection.classList.remove('hidden');
+                            liveOverlay.classList.remove('active'); // Hide finale if new timer
+                            timerFinished = false; // Reset flag for new timer
+                            setTimer(startAt);
+                        }
+                    }
+                }
+                if (name === VAR_TITLE && value) timerTitle.textContent = value;
+                if (name === VAR_SUBTITLE && value) timerSubtitle.textContent = value;
+                if (name === VAR_LABEL && value) {
+                    const statusBadge = document.getElementById('timer-status');
+                    if (statusBadge) statusBadge.textContent = value;
+                }
+            }
+
+            // --- Helper functions from legacy overlay ---
+            function tryParseJson(value) {
+                if (typeof value !== "string") return null;
+                const trimmed = value.trim();
+                if (!trimmed) return null;
+                if (trimmed[0] !== "{" && trimmed[0] !== "[") return null;
+                try { return JSON.parse(trimmed); } catch { return null; }
+            }
+
+            function extractPayload(d) {
+                if (!d || typeof d !== "object") return null;
+                if (d.action || d.start_at !== undefined) return d;
+                if (d.data && typeof d.data === "string") {
+                    const parsed = tryParseJson(d.data);
+                    if (parsed) return parsed;
+                }
+                if (d.data && typeof d.data === "object") {
+                    if (d.data.action || d.data.start_at !== undefined) return d.data;
+                    if (typeof d.data.data === "string") {
+                        const parsed = tryParseJson(d.data.data);
+                        if (parsed) return parsed;
+                    }
+                    if (d.data.data && typeof d.data.data === "object") return d.data.data;
+                    if (typeof d.data.payload === "string") {
+                        const parsed = tryParseJson(d.data.payload);
+                        if (parsed) return parsed;
+                    }
+                    if (d.data.payload && typeof d.data.payload === "object") return d.data.payload;
+                }
+                return null;
+            }
+            // --- End helper functions ---
+
+            ws.onmessage = (event) => {
+                try {
+                    const raw = event.data;
+                    const d = JSON.parse(raw);
+
+                    // Try to extract action payload (like legacy overlay does)
+                    const payload = extractPayload(d);
+
+                    // 1. Handle Direct Broadcast (stream_start action)
+                    if (payload && (payload.action === "stream_start" || payload.start_at !== undefined)) {
+                        console.log("[Overlay] Action received:", payload);
+                        timerSection.classList.remove('hidden');
+
+                        if (payload.start_at !== undefined) {
+                            const startAt = parseInt(payload.start_at);
+                            if (startAt === 0) {
+                                setTimer(null);
+                                timerSection.classList.add('hidden');
+                            } else if (!isNaN(startAt)) {
+                                setTimer(startAt);
+                            }
+                        }
+
+                        if (payload.title) timerTitle.textContent = payload.title;
+                        if (payload.subtitle) timerSubtitle.textContent = payload.subtitle;
+                        if (payload.label) {
+                            const b = document.getElementById('timer-status');
+                            if (b) b.textContent = payload.label;
+                        }
+                        return;
+                    }
+
+                    // 2. Handle Global Variable Update (Events)
+                    if (d.event && d.event.type === "GlobalVariableUpdated" && d.data && d.data.name) {
+                        handleUpdate(d.data.name, d.data.value);
+                        return;
+                    }
+
+                    // 3. Handle GetGlobalVar Responses
+                    if (d.id && typeof d.id === "string" && d.id.startsWith("GET_")) {
+                        const varName = d.id.replace(/^GET_ARGS_/, "").replace(/^GET_/, "");
+                        if (d.data && d.data.value !== undefined) {
+                            handleUpdate(varName, d.data.value);
+                        } else if (d.value !== undefined) {
+                            handleUpdate(varName, d.value);
+                        }
+                        return;
+                    }
+
+                    // 4. Fallback: check if d.data has name/value (some SB versions)
+                    if (d.id && d.data && d.data.name) {
+                        handleUpdate(d.data.name, d.data.value);
+                    }
+
+                } catch (e) {
+                    console.error("[Overlay] JS Error:", e);
+                }
+            };
+            ws.onclose = () => {
+                console.warn("[Overlay] 🔌 Disconnected. Retrying in 5s...");
+                setTimeout(connectWebsocket, 5000);
+            };
+
+            ws.onerror = (err) => {
+                console.error("[Overlay] WS Error:", err);
+            };
+        }
+
+        connectWebsocket();
+
+        // =============================================
+        // AUDIO VISUALIZER (WebSocket FFT from Python server)
+        // =============================================
+        const AUDIO_WS_URL = 'ws://localhost:8765';
+        const audioCover = document.getElementById('player-cover');
+        const audioCoverWrap = audioCover?.parentElement;
+        let audioWs = null;
+        let audioWsReconnectTimer = null;
+        let bassRing, midRing, highRing;
+
+        function connectAudioVisualizer() {
+            if (audioWs && audioWs.readyState === WebSocket.OPEN) return;
+
+            try {
+                audioWs = new WebSocket(AUDIO_WS_URL);
+
+                audioWs.onopen = () => {
+                    console.log('[Visualizer] Connected to audio server');
+                };
+
+                audioWs.onmessage = (event) => {
+                    try {
+                        const data = JSON.parse(event.data);
+                        if (data.type === 'fft' && data.bands) {
+                            window.latestBands = data.bands;
+                            updateCoverVisualization(data.bands);
+                        }
+                    } catch (e) { }
+                };
+
+                audioWs.onclose = () => {
+                    console.log('[Visualizer] Disconnected');
+                    resetVisualization();
+                    if (!audioWsReconnectTimer) {
+                        audioWsReconnectTimer = setTimeout(() => {
+                            audioWsReconnectTimer = null;
+                            connectAudioVisualizer();
+                        }, 5000);
+                    }
+                };
+
+                audioWs.onerror = () => { };
+            } catch (e) { }
+        }
+
+        function updateCoverVisualization(bands) {
+            let bass, mid, high;
+
+            if (bands.length === 128) {
+                // Aggregate 128 bands
+                bass = Math.max(...bands.slice(0, 16));
+                mid = bands.slice(16, 64).reduce((a, b) => a + b, 0) / 48;
+                high = bands.slice(64, 128).reduce((a, b) => a + b, 0) / 64;
+            } else if (bands.length === 64) {
+                // Legacy 64 bands
+                bass = Math.max(...bands.slice(0, 8));
+                mid = bands.slice(8, 32).reduce((a, b) => a + b, 0) / 24;
+                high = bands.slice(32, 64).reduce((a, b) => a + b, 0) / 32;
+            } else if (bands.length >= 32) {
+                // Legacy 32 bands
+                bass = Math.max(...bands.slice(0, 4));
+                mid = bands.slice(4, 16).reduce((a, b) => a + b, 0) / 12;
+                high = bands.slice(16, 32).reduce((a, b) => a + b, 0) / 16;
+            } else {
+                // Fallback
+                [bass, mid, high] = bands;
+            }
+
+            // Pulse cover on bass
+            if (audioCover) {
+                const scale = 1 + (bass * 0.08);
+                const glow = bass * 30;
+                const accent = window.coverColor || getComputedStyle(document.documentElement).getPropertyValue('--accent-1') || '#f8b84e';
+                audioCover.style.transform = `scale(${scale})`;
+                audioCover.style.boxShadow = `0 0 ${glow}px ${accent}`;
+            }
+
+            // Update rings
+            if (bassRing) {
+                bassRing.style.opacity = bass * 0.9;
+                bassRing.style.transform = `scale(${1 + bass * 0.1})`;
+            }
+            if (midRing) {
+                midRing.style.opacity = mid * 0.7;
+                midRing.style.transform = `scale(${1 + mid * 0.08})`;
+            }
+            if (highRing) {
+                highRing.style.opacity = high * 0.5;
+                highRing.style.transform = `scale(${1 + high * 0.05})`;
+            }
+        }
+
+        function resetVisualization() {
+            if (audioCover) {
+                audioCover.style.transform = '';
+                audioCover.style.boxShadow = '';
+            }
+            if (bassRing) bassRing.style.opacity = 0;
+            if (midRing) midRing.style.opacity = 0;
+            if (highRing) highRing.style.opacity = 0;
+            window.latestBands = [];
+        }
+
+        // Connect to audio visualizer
+        connectAudioVisualizer();
+
+        // Hook into updateCoverVisualization to capture data
+        const originalUpdate = window.updateCoverVisualization;
+        window.updateCoverVisualization = function (bands) {
+            if (originalUpdate) originalUpdate(bands);
+            window.latestBands = bands;
+        };
+    </script>
+
+    <script>
+        // =============================================
+        // GLOBAL VISUALIZER (Timer, Player, Live)
+        // =============================================
+        (function () {
+            const timerCvs = document.getElementById('timer-canvas');
+            const playerCvs = document.getElementById('player-viz-canvas');
+            const liveCvs = document.getElementById('live-canvas');
+            const playerBars = document.querySelectorAll('.player-bars .player-bar');
+
+            const smoothBands = new Array(64).fill(0);
+
+            function clamp01(value) {
+                return Math.max(0, Math.min(1, value));
+            }
+
+            function hexToRgba(hex, alpha) {
+                let value = hex.trim();
+                if (value.startsWith('rgba')) return value;
+                if (value.startsWith('rgb')) return value.replace('rgb', 'rgba').replace(')', `, ${alpha})`);
+                if (value.startsWith('#')) value = value.slice(1);
+                if (value.length === 3) {
+                    value = value[0] + value[0] + value[1] + value[1] + value[2] + value[2];
+                }
+                const r = parseInt(value.slice(0, 2), 16);
+                const g = parseInt(value.slice(2, 4), 16);
+                const b = parseInt(value.slice(4, 6), 16);
+                return `rgba(${r}, ${g}, ${b}, ${alpha})`;
+            }
+
+            function ensureCanvas(cvs) {
+                if (!cvs) return null;
+                const rect = cvs.getBoundingClientRect();
+                const dpr = window.devicePixelRatio || 1;
+                const targetW = Math.max(1, Math.floor(rect.width * dpr));
+                const targetH = Math.max(1, Math.floor(rect.height * dpr));
+                if (cvs.width !== targetW || cvs.height !== targetH) {
+                    cvs.width = targetW;
+                    cvs.height = targetH;
+                }
+                const ctx = cvs.getContext('2d');
+                ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+                return { ctx, w: rect.width, h: rect.height };
+            }
+
+            function normalizeBands(bands) {
+                if (!bands || !bands.length) return smoothBands;
+                const target = bands.slice(0, 64);
+                const smoothFactor = 0.12 * Math.max(0.5, Math.min(2.0, MOTION));
+                for (let i = 0; i < 64; i++) {
+                    const value = clamp01((target[i] || 0) * SENSITIVITY);
+                    smoothBands[i] += (value - smoothBands[i]) * smoothFactor;
+                }
+                return smoothBands;
+            }
+
+            function drawRing(ctx, w, h, bands, colorLines, baseColor, radiusBase, thickness, reflection) {
+                const cx = w / 2;
+                const cy = h / 2;
+                const high = Math.max(...bands.slice(32, 64));
+                const radius = radiusBase + high * 30;
+                const totalPoints = bands.length * 2;
+                const points = [];
+
+                for (let i = 0; i < totalPoints; i++) {
+                    let bandIdx = i % bands.length;
+                    if (i >= bands.length) {
+                        bandIdx = (bands.length - 1) - (i - bands.length);
+                    }
+                    bandIdx = Math.max(0, Math.min(bands.length - 1, bandIdx));
+                    const val = bands[bandIdx] || 0;
+                    const angle = (i / totalPoints) * Math.PI * 2 - Math.PI / 2;
+                    const r = radius + val * 70 * SENSITIVITY;
+                    points.push({
+                        x: cx + Math.cos(angle) * r,
+                        y: cy + Math.sin(angle) * r
+                    });
+                }
+
+                ctx.beginPath();
+                ctx.moveTo(points[0].x, points[0].y);
+
+                for (let i = 0; i < points.length; i++) {
+                    const p0 = points[i];
+                    const p1 = points[(i + 1) % points.length];
+                    const midX = (p0.x + p1.x) / 2;
+                    const midY = (p0.y + p1.y) / 2;
+                    ctx.quadraticCurveTo(p0.x, p0.y, midX, midY);
+                }
+
+                ctx.closePath();
+                ctx.strokeStyle = colorLines;
+                ctx.lineWidth = thickness;
+                ctx.lineCap = 'round';
+
+                if (!reflection) {
+                    ctx.shadowColor = baseColor;
+                    ctx.shadowBlur = 20;
+                }
+
+                ctx.stroke();
+                ctx.shadowBlur = 0;
+            }
+
+            function drawRadial(ctx, w, h, bands, color) {
+                const cx = w / 2;
+                const cy = h / 2;
+                const baseRadius = Math.min(w, h) * 0.25;
+                const step = (Math.PI * 2) / bands.length;
+
+                ctx.beginPath();
+                ctx.strokeStyle = color;
+                ctx.lineWidth = 3;
+
+                for (let i = 0; i < bands.length; i++) {
+                    const amp = bands[i];
+                    const angle = i * step;
+                    const outer = baseRadius + amp * (Math.min(w, h) * 0.22);
+                    const x1 = Math.cos(angle) * baseRadius + cx;
+                    const y1 = Math.sin(angle) * baseRadius + cy;
+                    const x2 = Math.cos(angle) * outer + cx;
+                    const y2 = Math.sin(angle) * outer + cy;
+                    ctx.moveTo(x1, y1);
+                    ctx.lineTo(x2, y2);
+                }
+                ctx.stroke();
+            }
+
+            function drawWave(ctx, w, h, bands, color) {
+                ctx.beginPath();
+                for (let i = 0; i < bands.length; i++) {
+                    const amp = bands[i];
+                    const x = (i / (bands.length - 1)) * w;
+                    const y = h / 2 + (amp - 0.5) * h * 0.6;
+                    if (i === 0) ctx.moveTo(x, y);
+                    else ctx.lineTo(x, y);
+                }
+                ctx.strokeStyle = color;
+                ctx.lineWidth = 3;
+                ctx.lineCap = 'round';
+                ctx.stroke();
+            }
+
+            function drawTiles(ctx, w, h, bands, color) {
+                const cols = 8;
+                const rows = 4;
+                const cellW = w / cols;
+                const cellH = h / rows;
+                let idx = 0;
+
+                for (let r = 0; r < rows; r++) {
+                    for (let c = 0; c < cols; c++) {
+                        const amp = bands[idx % bands.length];
+                        const pad = 6;
+                        const height = cellH * (0.25 + amp * 0.75);
+                        ctx.fillStyle = hexToRgba(color, 0.15 + amp * 0.7);
+                        ctx.fillRect(c * cellW + pad, r * cellH + (cellH - height) + pad, cellW - pad * 2, height - pad);
+                        idx++;
+                    }
+                }
+            }
+
+            function drawHex(ctx, w, h, bands, color) {
+                const size = 12;
+                const hexHeight = size * 2;
+                const hexWidth = Math.sqrt(3) * size;
+                const rows = Math.ceil(h / (hexHeight * 0.75)) + 1;
+                const cols = Math.ceil(w / hexWidth) + 2;
+                let idx = 0;
+
+                for (let r = 0; r < rows; r++) {
+                    for (let c = 0; c < cols; c++) {
+                        const x = c * hexWidth + ((r % 2) ? hexWidth / 2 : 0);
+                        const y = r * (hexHeight * 0.75);
+                        const amp = bands[idx % bands.length];
+                        const alpha = 0.1 + amp * 0.9;
+                        ctx.beginPath();
+                        for (let i = 0; i < 6; i++) {
+                            const angle = Math.PI / 3 * i + Math.PI / 6;
+                            const px = x + Math.cos(angle) * size;
+                            const py = y + Math.sin(angle) * size;
+                            if (i === 0) ctx.moveTo(px, py);
+                            else ctx.lineTo(px, py);
+                        }
+                        ctx.closePath();
+                        ctx.fillStyle = hexToRgba(color, alpha);
+                        ctx.fill();
+                        idx++;
+                    }
+                }
+            }
+
+            function updatePlayerBars(bands) {
+                if (!playerBars.length) return;
+                const step = Math.max(1, Math.floor(bands.length / playerBars.length));
+                playerBars.forEach((bar, i) => {
+                    const amp = bands[Math.min(bands.length - 1, i * step)];
+                    bar.style.height = `${12 + amp * 88}%`;
+                    bar.style.opacity = (0.4 + amp * 0.6).toFixed(2);
+                });
+            }
+
+            function drawCanvas(cvs, bands, mode, baseColor) {
+                const info = ensureCanvas(cvs);
+                if (!info) return;
+                const ctx = info.ctx;
+                const w = info.w;
+                const h = info.h;
+                ctx.clearRect(0, 0, w, h);
+                const color = hexToRgba(baseColor, 0.9);
+
+                if (mode === 'ring') {
+                    drawRing(ctx, w, h, bands, color, baseColor, Math.min(w, h) * 0.28, 4, false);
+                } else if (mode === 'radial') {
+                    drawRadial(ctx, w, h, bands, color);
+                } else if (mode === 'wave') {
+                    drawWave(ctx, w, h, bands, color);
+                } else if (mode === 'tiles') {
+                    drawTiles(ctx, w, h, bands, baseColor);
+                } else if (mode === 'hex') {
+                    drawHex(ctx, w, h, bands, baseColor);
+                }
+            }
+
+            function draw() {
+                const bands = normalizeBands(window.latestBands || []);
+                const baseColor = window.coverColor || getComputedStyle(document.documentElement).getPropertyValue('--accent-1') || '#f8b84e';
+
+                if (timerCvs) {
+                    drawCanvas(timerCvs, bands, VIZ, baseColor);
+                }
+                if (playerCvs) {
+                    drawCanvas(playerCvs, bands, VIZ, baseColor);
+                }
+                if (liveCvs) {
+                    if (VIZ === 'ring') {
+                        const info = ensureCanvas(liveCvs);
+                        if (info) {
+                            const ctx = info.ctx;
+                            const w = info.w;
+                            const h = info.h;
+                            ctx.clearRect(0, 0, w, h);
+                            const color = hexToRgba(baseColor, 1.0);
+                            const reflect = hexToRgba(baseColor, 0.3);
+                            drawRing(ctx, w, h, bands, color, baseColor, Math.min(w, h) * 0.28, 4, false);
+                            ctx.save();
+                            ctx.translate(w / 2, h / 2 + 320);
+                            ctx.scale(1, -1);
+                            ctx.translate(-w / 2, -h / 2);
+                            drawRing(ctx, w, h, bands, reflect, baseColor, Math.min(w, h) * 0.28, 4, true);
+                            ctx.restore();
+                        }
+                    } else {
+                        drawCanvas(liveCvs, bands, VIZ, baseColor);
+                    }
+                }
+
+                if (VIZ === 'bars') {
+                    updatePlayerBars(bands);
+                }
+
+                requestAnimationFrame(draw);
+            }
+
+            requestAnimationFrame(draw);
+        })();
+    </script>
+</body>
+
+</html>
